@@ -58,10 +58,6 @@ public class MeshDevice {
         return devices;
     }
 
-    public enum State {
-        offline, on, off
-    }
-
     public String getDescription() {
         return "Address " + String.format("0x%02X", address)
                 + ", state " + state + ", brightness " + brightness;
@@ -75,6 +71,10 @@ public class MeshDevice {
         return address;
     }
 
+    public void setAddress(int address) {
+        this.address = address;
+    }
+
     public ArrayList<Integer> getGroupAddress() {
         return groupAddress;
     }
@@ -85,5 +85,9 @@ public class MeshDevice {
 
     public String getVersion() {
         return version;
+    }
+
+    public enum State {
+        offline, on, off
     }
 }

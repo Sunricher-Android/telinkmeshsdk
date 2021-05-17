@@ -21,6 +21,7 @@ import com.sunricher.telinkblemeshlib.MeshNode;
 import java.util.ArrayList;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -48,8 +49,13 @@ public class DefaultNetworkActivity extends AppCompatActivity {
             @Override
             public void onItemClick(DefaultNetworkAdapter.ViewHolder holder, int position, MyDevice device) {
 
+                if (!device.isValid()) {
+                    return;
+                }
+
                 Intent intent = new Intent(DefaultNetworkActivity.this, DeviceActivity.class);
                 DeviceActivity.device = device;
+                Log.i("DefaultNetwork ", "" + device.getMacData().length);
                 DefaultNetworkActivity.this.startActivity(intent);
             }
         });
@@ -74,6 +80,18 @@ public class DefaultNetworkActivity extends AppCompatActivity {
 
                 MeshManager.getInstance().stopScanNode();
                 DefaultNetworkActivity.this.finish();
+            }
+
+            @Override
+            public void didGetMac(MeshManager manager, byte[] macBytes, int address) {
+
+                MeshCommand cmd = MeshCommand.requestMacDeviceType(address);
+                MeshManager.getInstance().send(cmd);
+
+                Intent intent = new Intent("MeshManager.didGetMac");
+                intent.putExtra("macBytes", macBytes);
+                intent.putExtra("address", address);
+                LocalBroadcastManager.getInstance(DefaultNetworkActivity.this).sendBroadcast(intent);
             }
         });
 

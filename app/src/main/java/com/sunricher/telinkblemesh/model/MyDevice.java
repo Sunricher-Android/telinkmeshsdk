@@ -3,7 +3,7 @@ package com.sunricher.telinkblemesh.model;
 import com.sunricher.telinkblemeshlib.MeshDevice;
 import com.sunricher.telinkblemeshlib.MeshDeviceType;
 
-import java.io.Serializable;
+import java.util.Arrays;
 
 import androidx.annotation.Nullable;
 
@@ -36,7 +36,7 @@ public class MyDevice {
     }
 
     public Boolean isValid() {
-        return macData != null && deviceType != null;
+        return macData != null || deviceType != null;
     }
 
     @Override
@@ -50,26 +50,29 @@ public class MyDevice {
         return this.meshDevice.getAddress() == another.meshDevice.getAddress();
     }
 
-    public void updateWithDevice(MyDevice device) {
-        this.meshDevice = device.meshDevice;
-        this.macData = device.macData;
-        this.deviceType = device.deviceType;
-    }
-
     public MeshDevice getMeshDevice() {
         return meshDevice;
+    }
+
+    public void setMeshDevice(MeshDevice meshDevice) {
+        this.meshDevice = meshDevice;
     }
 
     public byte[] getMacData() {
         return macData;
     }
 
-    public MeshDeviceType getDeviceType() {
-        return deviceType;
+    public void setMacData(byte[] macData) {
+
+        if (macData != null) {
+            this.macData = Arrays.copyOf(macData, macData.length);
+        } else {
+            this.macData = null;
+        }
     }
 
-    public void setMacData(byte[] macData) {
-        this.macData = macData;
+    public MeshDeviceType getDeviceType() {
+        return deviceType;
     }
 
     public void setDeviceType(MeshDeviceType deviceType) {

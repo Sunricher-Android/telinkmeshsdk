@@ -1,5 +1,6 @@
 package com.sunricher.telinkblemesh.activity;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -22,7 +23,6 @@ import androidx.appcompat.widget.SwitchCompat;
 public class DeviceActivity extends AppCompatActivity {
 
     public static MyDevice device;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +51,8 @@ public class DeviceActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
+                Intent intent = new Intent(DeviceActivity.this, DeviceSettingsActivity.class);
+                DeviceActivity.this.startActivity(intent);
             }
         });
     }

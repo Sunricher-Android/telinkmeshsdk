@@ -46,7 +46,6 @@ public final class MeshManager {
 
     private final byte[] loginRandm = new byte[8];
 
-    private Application application;
     private MeshNetwork network;
 
     private Boolean isAutoLogin;
@@ -82,8 +81,6 @@ public final class MeshManager {
     public void init(Application application) {
 
         Log.i(LOG_TAG, "init");
-
-        this.application = application;
 
         BleManager.getInstance().init(application);
 
@@ -129,10 +126,21 @@ public final class MeshManager {
         BleManager.getInstance().scan(scanCallback);
     }
 
+    /**
+     *
+     * this.scanNode(network, autoLogin, ignoreName: false)
+     * @param network
+     * @param autoLogin
+     */
     public void scanNode(MeshNetwork network, Boolean autoLogin) {
         this.scanNode(network, autoLogin, false);
     }
 
+    /**
+     *
+     * this.scan(network, autoLogin: false, ignoreName: false)
+     * @param network
+     */
     public void scanNode(MeshNetwork network) {
         this.scanNode(network, false, false);
     }
@@ -799,6 +807,9 @@ public final class MeshManager {
         byte[] macData = new byte[]{userData[6], userData[5], userData[4], userData[3], userData[2], userData[1]};
         Log.i(LOG_TAG, "handleNewNodeAddressData address " + String.format("%02X", newAddress) + ", " + HexUtil.encodeHexStr(macData));
 
+        if (nodeCallback != null) {
+            nodeCallback.didGetMac(this, macData, newAddress);
+        }
     }
 
     private static class MeshManagerHolder {

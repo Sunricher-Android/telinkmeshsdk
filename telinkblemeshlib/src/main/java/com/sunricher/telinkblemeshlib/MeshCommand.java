@@ -83,7 +83,7 @@ public class MeshCommand {
         return seqNo;
     }
 
-    public static MeshCommand makeWithNotifyData(byte[] data) {
+    static MeshCommand makeWithNotifyData(byte[] data) {
 
         if (data.length != 20) {
             return null;
@@ -116,7 +116,7 @@ public class MeshCommand {
     }
 
     /**
-     * Telink cmd
+     * Telink cmd, request mac address.
      */
     public static MeshCommand requestAddressMac(int address) {
 
@@ -130,6 +130,13 @@ public class MeshCommand {
         return cmd;
     }
 
+    /**
+     * Change address
+     * @param address Device address
+     * @param newAddress New address
+     * @param macData mac address byte[]
+     * @return
+     */
     public static MeshCommand changeAddress(int address, int newAddress, byte[] macData) {
 
         MeshCommand cmd = new MeshCommand();
@@ -148,6 +155,11 @@ public class MeshCommand {
         return cmd;
     }
 
+    /**
+     * Reset to factory network
+     * @param address
+     * @return
+     */
     public static MeshCommand resetNetwork(int address) {
 
         MeshCommand cmd = new MeshCommand();
@@ -159,7 +171,7 @@ public class MeshCommand {
     }
 
     /**
-     * SR cmd
+     * SR cmd, request mac address and device type.
      */
     public static MeshCommand requestMacDeviceType(int address) {
 

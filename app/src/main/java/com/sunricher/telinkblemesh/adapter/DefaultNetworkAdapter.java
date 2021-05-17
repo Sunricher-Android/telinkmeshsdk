@@ -8,6 +8,7 @@ import android.widget.TextView;
 import com.sunricher.telinkblemesh.R;
 import com.sunricher.telinkblemesh.model.MyDevice;
 import com.sunricher.telinkblemeshlib.MeshDeviceType;
+import com.sunricher.telinkblemeshlib.telink.Arrays;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -93,7 +94,7 @@ public class DefaultNetworkAdapter extends RecyclerView.Adapter<DefaultNetworkAd
         if (devices.contains(device)) {
 
             int index = devices.indexOf(device);
-            devices.get(index).updateWithDevice(device);
+            devices.get(index).setMeshDevice(device.getMeshDevice());
             result = true;
 
         } else {
@@ -108,6 +109,7 @@ public class DefaultNetworkAdapter extends RecyclerView.Adapter<DefaultNetworkAd
     public void updateDeviceType(int deviceAddress, MeshDeviceType deviceType, byte[] macData) {
 
         for (MyDevice device : devices) {
+
             if (device.getMeshDevice().getAddress() == deviceAddress) {
                 device.setDeviceType(deviceType);
                 device.setMacData(macData);
