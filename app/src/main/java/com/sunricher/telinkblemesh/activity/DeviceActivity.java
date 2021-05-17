@@ -15,6 +15,7 @@ import com.sunricher.telinkblemeshlib.MeshCommand;
 import com.sunricher.telinkblemeshlib.MeshDevice;
 import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
+import com.sunricher.telinkblemeshlib.telink.Command;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -88,8 +89,8 @@ public class DeviceActivity extends AppCompatActivity {
 
                 if (fromUser) {
 
-//                    MeshCommand cmd = MeshCommand.setBrightness(device.getMeshDevice().getAddress(), value);
-//                    MeshManager.getInstance().send(cmd);
+                    MeshCommand cmd = MeshCommand.setBrightness(device.getMeshDevice().getAddress(), value);
+                    MeshManager.getInstance().sendSample(cmd);
                 }
             }
 

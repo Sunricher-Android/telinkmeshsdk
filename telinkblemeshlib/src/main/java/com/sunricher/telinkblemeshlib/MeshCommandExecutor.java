@@ -13,6 +13,25 @@ class MeshCommandExecutor {
 
     }
 
+    void executeNotify(byte[] data) {
+
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+
+                    MeshManager.getInstance().sendNotifyData(data);
+                    Thread.sleep(500);
+
+                } catch (InterruptedException e) {
+
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
     void executeCommand(MeshCommand command) {
 
         executorService.execute(new Runnable() {
@@ -21,8 +40,8 @@ class MeshCommandExecutor {
 
                 try {
 
-                    Thread.sleep(300);
                     MeshManager.getInstance().writeCommand(command);
+                    Thread.sleep(300);
 
                 } catch (InterruptedException e) {
 

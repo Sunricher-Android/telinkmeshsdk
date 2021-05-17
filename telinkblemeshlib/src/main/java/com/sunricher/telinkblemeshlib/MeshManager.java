@@ -2,8 +2,6 @@ package com.sunricher.telinkblemeshlib;
 
 import android.app.Application;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
 import android.util.Log;
 
 import com.clj.fastble.BleManager;
@@ -69,6 +67,7 @@ public final class MeshManager {
     private byte[] macBytes;
 
     private MeshCommandExecutor commandExecutor = new MeshCommandExecutor();
+    private SampleCommandCenter sampleCommandCenter = new SampleCommandCenter();
 
     private MeshManager() {
         Log.i(LOG_TAG, "created");
@@ -158,6 +157,8 @@ public final class MeshManager {
 
     public void connect(MeshNode node) {
 
+        this.sampleCommandCenter.clear();
+
         if (!BleManager.getInstance().isBlueEnable()) {
             return;
         }
@@ -179,6 +180,8 @@ public final class MeshManager {
 
     public void disconnect(Boolean autoLogin) {
 
+        this.sampleCommandCenter.clear();
+
         this.isAutoLogin = autoLogin;
         this.isLogin = false;
         this.connectNode = null;
@@ -199,12 +202,25 @@ public final class MeshManager {
         this.deviceCallback = deviceCallback;
     }
 
+    /**
+     * Scan mesh devices in the current network after login.
+     */
     public void scanMeshDevices() {
 
         Log.i(LOG_TAG, "scanMeshDevices");
 
         byte[] data = new byte[]{0x01};
+        this.commandExecutor.executeNotify(data);
+    }
+
+    void sendNotifyData(byte[] data) {
+
         this.write(MeshUUID.accessService, MeshUUID.notifyCharacteristic, data, notifyWriteCallback);
+    }
+
+    public void sendSample(MeshCommand command) {
+
+        sampleCommandCenter.append(command);
     }
 
     public void send(MeshCommand command) {
