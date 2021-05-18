@@ -461,6 +461,10 @@ public final class MeshManager {
                 byte[] sk = MeshManager.this.sessionKey;
                 byte[] result = AES.decrypt(sk, nonce, data);
 
+                if (result == null || result.length < 1) {
+                    return;
+                }
+
                 Log.i(LOG_TAG, "onCharacteristicChanged " + HexUtil.encodeHexStr(result));
                 MeshManager.this.handleNotifyValue(result);
             }

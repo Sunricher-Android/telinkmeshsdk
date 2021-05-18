@@ -9,8 +9,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TelinkBleMesh">
-        <activity android:name=".activity.MeshAddressActivity"></activity>
-        <activity android:name=".activity.DeviceSettingsActivity" />
+        <activity
+            android:name=".activity.AddDeviceActivity"
+            android:label="Add device" />
+        <activity
+            android:name=".activity.MeshAddressActivity"
+            android:label="Mesh address" />
+        <activity
+            android:name=".activity.DeviceSettingsActivity"
+            android:label="Device settings" />
         <activity
             android:name=".activity.DeviceActivity"
             android:label="Device" />

@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 public class MeshAddressActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = "MeshAddressActivity";
-    private static final MeshNetwork network = new MeshNetwork("android_telink", "123456");
+    public static MeshNetwork network = MeshNetwork.factory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

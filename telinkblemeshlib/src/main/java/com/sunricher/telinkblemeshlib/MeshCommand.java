@@ -42,47 +42,6 @@ public class MeshCommand {
         this.userData = new byte[9];
     }
 
-    private int increaseSeqNo() {
-
-        seqNo += 1;
-        if (seqNo >= 0xFFFFFF) {
-            seqNo = 1;
-        }
-
-        return seqNo;
-    }
-
-    public byte[] getCommandData() {
-
-        byte[] data = new byte[20];
-
-        int seqNo = this.increaseSeqNo();
-        data[0] = (byte) ((seqNo >> 16) & 0xFF);
-        data[1] = (byte) ((seqNo >> 8) & 0xFF);
-        data[2] = (byte) (seqNo & 0xFF);
-
-        data[3] = (byte) (src & 0xFF);
-        data[4] = (byte) ((src >> 8) & 0xFF);
-        data[5] = (byte) (dst & 0xFF);
-        data[6] = (byte) ((dst >> 8) & 0xFF);
-
-        data[7] = (byte) tag;
-        data[8] = (byte)((vendorId >> 8) & 0xFF);
-        data[9] = (byte) (vendorId & 0xFF);
-        data[10] = (byte) (param);
-
-        for (int i = 0; i < 9; i++) {
-            int dataIndex = 11 + i;
-            data[dataIndex] = userData[i];
-        }
-
-        return data;
-    }
-
-    public int getSeqNo() {
-        return seqNo;
-    }
-
     static MeshCommand makeWithNotifyData(byte[] data) {
 
         if (data.length != 20) {
@@ -132,9 +91,10 @@ public class MeshCommand {
 
     /**
      * Change address
-     * @param address Device address
+     *
+     * @param address    Device address
      * @param newAddress New address
-     * @param macData mac address byte[]
+     * @param macData    mac address byte[]
      * @return
      */
     public static MeshCommand changeAddress(int address, int newAddress, byte[] macData) {
@@ -157,6 +117,7 @@ public class MeshCommand {
 
     /**
      * Reset to factory network
+     *
      * @param address
      * @return
      */
@@ -183,10 +144,9 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
      * @param isOn
-     * @param delay Range [0, 0xFFFF], default is 0.
+     * @param delay   Range [0, 0xFFFF], default is 0.
      * @return
      */
     public static MeshCommand turnOnOff(int address, Boolean isOn, int delay) {
@@ -201,7 +161,6 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
      * @param brightness Range [0, 100].
      * @return
@@ -216,9 +175,8 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
-     * @param value Range [0, 100], 0 means the coolest color, 100 means the warmest color.
+     * @param value   Range [0, 100], 0 means the coolest color, 100 means the warmest color.
      * @return
      */
     public static MeshCommand setColorTemperature(int address, int value) {
@@ -233,9 +191,8 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
-     * @param value Range [0, 255].
+     * @param value   Range [0, 255].
      * @return
      */
     public static MeshCommand setWhite(int address, int value) {
@@ -250,9 +207,8 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
-     * @param value Range [0, 255].
+     * @param value   Range [0, 255].
      * @return
      */
     public static MeshCommand setRed(int address, int value) {
@@ -266,9 +222,8 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
-     * @param value Range [0, 255].
+     * @param value   Range [0, 255].
      * @return
      */
     public static MeshCommand setGreen(int address, int value) {
@@ -282,9 +237,8 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
-     * @param value Range [0, 255].
+     * @param value   Range [0, 255].
      * @return
      */
     public static MeshCommand setBlue(int address, int value) {
@@ -298,11 +252,10 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
-     * @param red Range [0, 255].
-     * @param green Range [0, 255].
-     * @param blue Range [0, 255].
+     * @param red     Range [0, 255].
+     * @param green   Range [0, 255].
+     * @param blue    Range [0, 255].
      * @return
      */
     public static MeshCommand setRgb(int address, int red, int green, int blue) {
@@ -315,6 +268,47 @@ public class MeshCommand {
         cmd.userData[0] = (byte) (green & 0xFF);
         cmd.userData[0] = (byte) (blue & 0xFF);
         return cmd;
+    }
+
+    private int increaseSeqNo() {
+
+        seqNo += 1;
+        if (seqNo >= 0xFFFFFF) {
+            seqNo = 1;
+        }
+
+        return seqNo;
+    }
+
+    public byte[] getCommandData() {
+
+        byte[] data = new byte[20];
+
+        int seqNo = this.increaseSeqNo();
+        data[0] = (byte) ((seqNo >> 16) & 0xFF);
+        data[1] = (byte) ((seqNo >> 8) & 0xFF);
+        data[2] = (byte) (seqNo & 0xFF);
+
+        data[3] = (byte) (src & 0xFF);
+        data[4] = (byte) ((src >> 8) & 0xFF);
+        data[5] = (byte) (dst & 0xFF);
+        data[6] = (byte) ((dst >> 8) & 0xFF);
+
+        data[7] = (byte) tag;
+        data[8] = (byte) ((vendorId >> 8) & 0xFF);
+        data[9] = (byte) (vendorId & 0xFF);
+        data[10] = (byte) (param);
+
+        for (int i = 0; i < 9; i++) {
+            int dataIndex = 11 + i;
+            data[dataIndex] = userData[i];
+        }
+
+        return data;
+    }
+
+    public int getSeqNo() {
+        return seqNo;
     }
 
     public int getSrc() {
@@ -339,5 +333,12 @@ public class MeshCommand {
 
     public byte[] getUserData() {
         return userData;
+    }
+
+    public static class Address {
+
+        public static final int all = 0xFFFF;
+
+        public static final int connectNode = 0x0000;
     }
 }
