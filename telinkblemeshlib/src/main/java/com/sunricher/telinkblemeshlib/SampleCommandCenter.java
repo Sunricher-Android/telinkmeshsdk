@@ -23,13 +23,13 @@ class SampleCommandCenter {
         commands = new ArrayList<>();
     }
 
-    public void append(MeshCommand command) {
+    void append(MeshCommand command) {
 
         commands.add(command);
         start();
     }
 
-    public void clear() {
+    void clear() {
 
         commands.clear();
     }

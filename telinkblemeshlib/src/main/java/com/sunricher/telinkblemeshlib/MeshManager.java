@@ -15,6 +15,8 @@ import com.clj.fastble.data.BleScanState;
 import com.clj.fastble.exception.BleException;
 import com.clj.fastble.scan.BleScanRuleConfig;
 import com.clj.fastble.utils.HexUtil;
+import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
+import com.sunricher.telinkblemeshlib.callback.NodeCallback;
 import com.sunricher.telinkblemeshlib.telink.AES;
 import com.sunricher.telinkblemeshlib.telink.Arrays;
 import com.sunricher.telinkblemeshlib.telink.Command;
@@ -50,8 +52,8 @@ public final class MeshManager {
     private Boolean isScanIgnoreName;
     private Boolean isLogin;
     private MeshNode connectNode;
-    private MeshManagerNodeCallback nodeCallback;
-    private MeshManagerDeviceCallback deviceCallback;
+    private NodeCallback nodeCallback;
+    private DeviceCallback deviceCallback;
 
     private BleScanCallback scanCallback;
     private BleGattCallback gattCallback;
@@ -126,8 +128,8 @@ public final class MeshManager {
     }
 
     /**
-     *
      * this.scanNode(network, autoLogin, ignoreName: false)
+     *
      * @param network
      * @param autoLogin
      */
@@ -136,8 +138,8 @@ public final class MeshManager {
     }
 
     /**
-     *
      * this.scan(network, autoLogin: false, ignoreName: false)
+     *
      * @param network
      */
     public void scanNode(MeshNetwork network) {
@@ -194,11 +196,11 @@ public final class MeshManager {
                 && BleManager.getInstance().isConnected(connectNode.getBleDevice());
     }
 
-    public void setNodeCallback(MeshManagerNodeCallback nodeCallback) {
+    public void setNodeCallback(NodeCallback nodeCallback) {
         this.nodeCallback = nodeCallback;
     }
 
-    public void setDeviceCallback(MeshManagerDeviceCallback deviceCallback) {
+    public void setDeviceCallback(DeviceCallback deviceCallback) {
         this.deviceCallback = deviceCallback;
     }
 
@@ -215,7 +217,7 @@ public final class MeshManager {
 
     void sendNotifyData(byte[] data) {
 
-        this.write(MeshUUID.accessService, MeshUUID.notifyCharacteristic, data, notifyWriteCallback);
+        this.write(MeshNode.UUID.accessService, MeshNode.UUID.notifyCharacteristic, data, notifyWriteCallback);
     }
 
     public void sendSample(MeshCommand command) {
@@ -249,7 +251,7 @@ public final class MeshManager {
         byte[] nonce = this.getSecIVM(macAddress, sn);
         byte[] data = AES.encrypt(sk, nonce, commandData);
 
-        this.write(MeshUUID.accessService, MeshUUID.commandCharacteristic, data, commandWriteCallback);
+        this.write(MeshNode.UUID.accessService, MeshNode.UUID.commandCharacteristic, data, commandWriteCallback);
     }
 
     private void write(UUID service, UUID characteristic, byte[] data, BleWriteCallback callback) {
@@ -320,8 +322,8 @@ public final class MeshManager {
             return;
         }
 
-        UUID serviceUUID = MeshUUID.accessService;
-        UUID characteristicUUID = MeshUUID.pairingCharacteristic;
+        UUID serviceUUID = MeshNode.UUID.accessService;
+        UUID characteristicUUID = MeshNode.UUID.pairingCharacteristic;
 
         byte[] commandData = new byte[17];
 
@@ -337,12 +339,12 @@ public final class MeshManager {
         wCmd.characteristicUUID = characteristicUUID;
         wCmd.tag = TAG_LOGIN_WRITE;
 
-        this.write(MeshUUID.accessService, MeshUUID.pairingCharacteristic, wCmd.data, new BleWriteCallback() {
+        this.write(MeshNode.UUID.accessService, MeshNode.UUID.pairingCharacteristic, wCmd.data, new BleWriteCallback() {
 
             @Override
             public void onWriteSuccess(int current, int total, byte[] justWrite) {
                 Log.i(LOG_TAG, "onWriteSuccess");
-                MeshManager.this.read(MeshUUID.accessService, MeshUUID.pairingCharacteristic, MeshManager.this.loginReadCallback);
+                MeshManager.this.read(MeshNode.UUID.accessService, MeshNode.UUID.pairingCharacteristic, MeshManager.this.loginReadCallback);
             }
 
             @Override
@@ -622,8 +624,8 @@ public final class MeshManager {
 
                 BleManager.getInstance().notify(
                         bleDevice,
-                        MeshUUID.accessService.toString(),
-                        MeshUUID.notifyCharacteristic.toString(),
+                        MeshNode.UUID.accessService.toString(),
+                        MeshNode.UUID.notifyCharacteristic.toString(),
                         MeshManager.this.notifyCallback);
 
                 MeshManager.this.login();
@@ -684,7 +686,7 @@ public final class MeshManager {
             @Override
             public void onWriteSuccess(int current, int total, byte[] justWrite) {
                 Log.i(LOG_TAG, "notifyWriteCallback onWriteSuccess");
-                MeshManager.this.read(MeshUUID.accessService, MeshUUID.notifyCharacteristic, MeshManager.this.notifyReadCallback);
+                MeshManager.this.read(MeshNode.UUID.accessService, MeshNode.UUID.notifyCharacteristic, MeshManager.this.notifyReadCallback);
             }
 
             @Override
@@ -700,7 +702,7 @@ public final class MeshManager {
             @Override
             public void onWriteSuccess(int current, int total, byte[] justWrite) {
                 Log.i(LOG_TAG, "commandWriteCallback onWriteSuccess");
-                MeshManager.this.read(MeshUUID.accessService, MeshUUID.commandCharacteristic, MeshManager.this.commandReadCallback);
+                MeshManager.this.read(MeshNode.UUID.accessService, MeshNode.UUID.commandCharacteristic, MeshManager.this.commandReadCallback);
             }
 
             @Override
@@ -721,42 +723,42 @@ public final class MeshManager {
 
         switch (tagValue) {
 
-            case MeshCommandConst.TAG_LIGHT_STATUS:
+            case MeshCommand.Const.TAG_LIGHT_STATUS:
                 Log.i(LOG_TAG, "light status tag");
                 this.handleLightStatusData(data);
                 break;
 
-            case MeshCommandConst.TAG_NODE_TO_APP:
+            case MeshCommand.Const.TAG_NODE_TO_APP:
                 Log.i(LOG_TAG, "node to app tag");
                 this.handleNodeToAppData(data);
                 break;
 
-            case MeshCommandConst.TAG_APP_TO_NODE:
+            case MeshCommand.Const.TAG_APP_TO_NODE:
                 Log.i(LOG_TAG, "app to node tag");
                 break;
 
-            case MeshCommandConst.TAG_ON_OFF:
+            case MeshCommand.Const.TAG_ON_OFF:
                 Log.i(LOG_TAG, "on off tag");
                 break;
 
-            case MeshCommandConst.TAG_BRIGHTNESS:
+            case MeshCommand.Const.TAG_BRIGHTNESS:
                 Log.i(LOG_TAG, "brightness tag");
                 break;
 
-            case MeshCommandConst.TAG_SINGLE_CHANNEL:
+            case MeshCommand.Const.TAG_SINGLE_CHANNEL:
                 Log.i(LOG_TAG, "single channel tag");
                 break;
 
-            case MeshCommandConst.TAG_REPLACE_ADDRESS:
+            case MeshCommand.Const.TAG_REPLACE_ADDRESS:
                 Log.i(LOG_TAG, "replace address tag");
                 break;
 
-            case MeshCommandConst.TAG_GET_MAC_NOTIFY:
+            case MeshCommand.Const.TAG_GET_MAC_NOTIFY:
                 Log.i(LOG_TAG, "get mac tag");
                 this.handleGetMacNotifyData(data);
                 break;
 
-            case MeshCommandConst.TAG_RESET_NETWORK:
+            case MeshCommand.Const.TAG_RESET_NETWORK:
                 Log.i(LOG_TAG, "reset network tag");
                 break;
 
@@ -795,7 +797,7 @@ public final class MeshManager {
 
         switch (srIdentifier) {
 
-            case MeshCommandConst.SR_IDENTIFIER_MAC:
+            case MeshCommand.Const.SR_IDENTIFIER_MAC:
 
                 int rawValue1 = (int) command.getUserData()[1] & 0xFF;
                 int rawValue2 = (int) command.getUserData()[2] & 0xFF;

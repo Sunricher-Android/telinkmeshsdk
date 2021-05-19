@@ -5,8 +5,7 @@ import android.util.SparseArray;
 
 import com.clj.fastble.data.BleDevice;
 import com.clj.fastble.utils.HexUtil;
-
-import java.util.Objects;
+import com.sunricher.telinkblemeshlib.util.ScanRecordUtil;
 
 public class MeshNode {
 
@@ -77,7 +76,7 @@ public class MeshNode {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MeshNode another = (MeshNode)o;
+        MeshNode another = (MeshNode) o;
         return this.macAddress.equals(another.getMacAddress());
     }
 
@@ -150,5 +149,24 @@ public class MeshNode {
 
     public void setRssi(int rssi) {
         this.rssi = rssi;
+    }
+
+    final static class UUID {
+
+        public static final java.util.UUID accessService = java.util.UUID.fromString("00010203-0405-0607-0809-0A0B0C0D1910");
+
+        public static final java.util.UUID notifyCharacteristic = java.util.UUID.fromString("00010203-0405-0607-0809-0A0B0C0D1911");
+
+        public static final java.util.UUID commandCharacteristic = java.util.UUID.fromString("00010203-0405-0607-0809-0A0B0C0D1912");
+
+        public static final java.util.UUID pairingCharacteristic = java.util.UUID.fromString("00010203-0405-0607-0809-0A0B0C0D1914");
+
+        public static final java.util.UUID otaCharacteristic = java.util.UUID.fromString("00010203-0405-0607-0809-0A0B0C0D1913");
+
+        public static final java.util.UUID deviceInformationService = java.util.UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb");
+
+        public static final java.util.UUID firmwareCharacteristic = java.util.UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb");
+
+
     }
 }

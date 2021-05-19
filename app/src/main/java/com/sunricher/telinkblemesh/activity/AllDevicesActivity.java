@@ -1,10 +1,6 @@
 package com.sunricher.telinkblemesh.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
+import android.bluetooth.BluetoothGatt;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,11 +9,16 @@ import android.util.Log;
 import com.sunricher.telinkblemesh.R;
 import com.sunricher.telinkblemesh.adapter.AllDevicesAdapter;
 import com.sunricher.telinkblemeshlib.MeshManager;
-import com.sunricher.telinkblemeshlib.MeshManagerNodeCallback;
 import com.sunricher.telinkblemeshlib.MeshNetwork;
 import com.sunricher.telinkblemeshlib.MeshNode;
+import com.sunricher.telinkblemeshlib.callback.NodeCallback;
 
 import java.util.ArrayList;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class AllDevicesActivity extends AppCompatActivity {
 
@@ -42,7 +43,7 @@ public class AllDevicesActivity extends AppCompatActivity {
         });
         recyclerView.setAdapter(adapter);
 
-        MeshManager.getInstance().setNodeCallback(new MeshManagerNodeCallback() {
+        MeshManager.getInstance().setNodeCallback(new NodeCallback() {
             @Override
             public void didDiscoverNode(MeshManager manager, MeshNode node) {
 
@@ -52,6 +53,41 @@ public class AllDevicesActivity extends AppCompatActivity {
 
                 nodes.add(node);
                 adapter.addNode(node);
+            }
+
+            @Override
+            public void didConnectNode(MeshManager manager, MeshNode node) {
+
+            }
+
+            @Override
+            public void didDisconnectNode(MeshManager manager, Boolean isActiveDisConnected, MeshNode node, BluetoothGatt gatt) {
+
+            }
+
+            @Override
+            public void didFailToConnectNode(MeshManager manager, MeshNode node) {
+
+            }
+
+            @Override
+            public void didLoginNode(MeshManager manager, MeshNode node) {
+
+            }
+
+            @Override
+            public void didFailToLoginNode(MeshManager manager) {
+
+            }
+
+            @Override
+            public void didGetMac(MeshManager manager, byte[] macBytes, int address) {
+
+            }
+
+            @Override
+            public void didConfirmNewNetwork(MeshManager manager, Boolean isSuccess) {
+
             }
         });
         MeshManager.getInstance().scanNode(MeshNetwork.factory, false, true);

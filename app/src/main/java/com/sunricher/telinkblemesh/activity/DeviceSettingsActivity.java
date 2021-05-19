@@ -16,13 +16,8 @@ import android.widget.Toast;
 import com.sunricher.telinkblemesh.R;
 import com.sunricher.telinkblemesh.model.MyDevice;
 import com.sunricher.telinkblemeshlib.MeshCommand;
-import com.sunricher.telinkblemeshlib.MeshDevice;
-import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
-import com.sunricher.telinkblemeshlib.MeshManagerDeviceCallback;
-import com.sunricher.telinkblemeshlib.MeshManagerNodeCallback;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import androidx.appcompat.app.AppCompatActivity;

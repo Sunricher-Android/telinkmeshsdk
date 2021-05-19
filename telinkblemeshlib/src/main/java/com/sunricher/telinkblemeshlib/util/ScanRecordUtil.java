@@ -1,4 +1,4 @@
-package com.sunricher.telinkblemeshlib;
+package com.sunricher.telinkblemeshlib.util;
 
 import android.bluetooth.le.ScanRecord;
 import android.os.ParcelUuid;

@@ -18,7 +18,7 @@ public class MeshCommand {
     private int dst = 0;
 
     /**
-     * [7], MeshCommandConst.TAG_XX
+     * [7], Const.TAG_XX
      */
     private int tag = 0;
 
@@ -80,7 +80,7 @@ public class MeshCommand {
     public static MeshCommand requestAddressMac(int address) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_REPLACE_ADDRESS;
+        cmd.tag = Const.TAG_REPLACE_ADDRESS;
         cmd.dst = address;
         cmd.param = 0xFF;
         cmd.userData[0] = (byte) 0xFF;
@@ -100,7 +100,7 @@ public class MeshCommand {
     public static MeshCommand changeAddress(int address, int newAddress, byte[] macData) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_REPLACE_ADDRESS;
+        cmd.tag = Const.TAG_REPLACE_ADDRESS;
         cmd.dst = address;
         cmd.param = newAddress & 0xFF;
         cmd.userData[0] = 0x00;
@@ -124,7 +124,7 @@ public class MeshCommand {
     public static MeshCommand resetNetwork(int address) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_RESET_NETWORK;
+        cmd.tag = Const.TAG_RESET_NETWORK;
         cmd.dst = address;
         // 0x01 reset network name to default value, 0x00 reset to `out_of_mesh`.
         cmd.param = 0x01;
@@ -137,7 +137,7 @@ public class MeshCommand {
     public static MeshCommand requestMacDeviceType(int address) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_APP_TO_NODE;
+        cmd.tag = Const.TAG_APP_TO_NODE;
         cmd.dst = address;
         cmd.userData[0] = (byte) 0x76;
         return cmd;
@@ -152,7 +152,7 @@ public class MeshCommand {
     public static MeshCommand turnOnOff(int address, Boolean isOn, int delay) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_ON_OFF;
+        cmd.tag = Const.TAG_ON_OFF;
         cmd.dst = address;
         cmd.param = isOn ? 0x01 : 0x00;
         cmd.userData[0] = (byte) (delay & 0xFF);
@@ -168,7 +168,7 @@ public class MeshCommand {
     public static MeshCommand setBrightness(int address, int brightness) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_BRIGHTNESS;
+        cmd.tag = Const.TAG_BRIGHTNESS;
         cmd.dst = address;
         cmd.param = brightness;
         return cmd;
@@ -182,9 +182,9 @@ public class MeshCommand {
     public static MeshCommand setColorTemperature(int address, int value) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_SINGLE_CHANNEL;
+        cmd.tag = Const.TAG_SINGLE_CHANNEL;
         cmd.dst = address;
-        cmd.param = MeshCommandConst.SINGLE_CHANNEL_COLOR_TEMPERATURE;
+        cmd.param = Const.SINGLE_CHANNEL_COLOR_TEMPERATURE;
         cmd.userData[0] = (byte) (value & 0xFF);
         cmd.userData[1] = (byte) 0b0000_0000;
         return cmd;
@@ -198,9 +198,9 @@ public class MeshCommand {
     public static MeshCommand setWhite(int address, int value) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_SINGLE_CHANNEL;
+        cmd.tag = Const.TAG_SINGLE_CHANNEL;
         cmd.dst = address;
-        cmd.param = MeshCommandConst.SINGLE_CHANNEL_COLOR_TEMPERATURE;
+        cmd.param = Const.SINGLE_CHANNEL_COLOR_TEMPERATURE;
         cmd.userData[0] = (byte) (value & 0xFF);
         cmd.userData[1] = (byte) 0b0001_0000;
         return cmd;
@@ -214,9 +214,9 @@ public class MeshCommand {
     public static MeshCommand setRed(int address, int value) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_SINGLE_CHANNEL;
+        cmd.tag = Const.TAG_SINGLE_CHANNEL;
         cmd.dst = address;
-        cmd.param = MeshCommandConst.SINGLE_CHANNEL_RED;
+        cmd.param = Const.SINGLE_CHANNEL_RED;
         cmd.userData[0] = (byte) (value & 0xFF);
         return cmd;
     }
@@ -229,9 +229,9 @@ public class MeshCommand {
     public static MeshCommand setGreen(int address, int value) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_SINGLE_CHANNEL;
+        cmd.tag = Const.TAG_SINGLE_CHANNEL;
         cmd.dst = address;
-        cmd.param = MeshCommandConst.SINGLE_CHANNEL_GREEN;
+        cmd.param = Const.SINGLE_CHANNEL_GREEN;
         cmd.userData[0] = (byte) (value & 0xFF);
         return cmd;
     }
@@ -244,9 +244,9 @@ public class MeshCommand {
     public static MeshCommand setBlue(int address, int value) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_SINGLE_CHANNEL;
+        cmd.tag = Const.TAG_SINGLE_CHANNEL;
         cmd.dst = address;
-        cmd.param = MeshCommandConst.SINGLE_CHANNEL_BLUE;
+        cmd.param = Const.SINGLE_CHANNEL_BLUE;
         cmd.userData[0] = (byte) (value & 0xFF);
         return cmd;
     }
@@ -261,9 +261,9 @@ public class MeshCommand {
     public static MeshCommand setRgb(int address, int red, int green, int blue) {
 
         MeshCommand cmd = new MeshCommand();
-        cmd.tag = MeshCommandConst.TAG_SINGLE_CHANNEL;
+        cmd.tag = Const.TAG_SINGLE_CHANNEL;
         cmd.dst = address;
-        cmd.param = MeshCommandConst.SINGLE_CHANNEL_RGB;
+        cmd.param = Const.SINGLE_CHANNEL_RGB;
         cmd.userData[0] = (byte) (red & 0xFF);
         cmd.userData[0] = (byte) (green & 0xFF);
         cmd.userData[0] = (byte) (blue & 0xFF);
@@ -335,10 +335,47 @@ public class MeshCommand {
         return userData;
     }
 
-    public static class Address {
+    public static final class Address {
 
         public static final int all = 0xFFFF;
 
         public static final int connectNode = 0x0000;
     }
+
+    static final class Const {
+
+        static final int TAG_APP_TO_NODE = 0xEA;
+
+        static final int TAG_NODE_TO_APP = 0xEB;
+
+        static final int TAG_LIGHT_STATUS = 0xDC;
+
+        static final int TAG_ON_OFF = 0xD0;
+
+        static final int TAG_BRIGHTNESS = 0xD2;
+
+        static final int TAG_SINGLE_CHANNEL = 0xE2;
+
+        static final int TAG_REPLACE_ADDRESS = 0xE0;
+
+        static final int TAG_GET_MAC_NOTIFY = 0xE1;
+
+        static final int TAG_RESET_NETWORK = 0xE3;
+
+
+        static final int SR_IDENTIFIER_MAC = 0x76;
+
+
+        static final int SINGLE_CHANNEL_RED = 0x01;
+
+        static final int SINGLE_CHANNEL_GREEN = 0x02;
+
+        static final int SINGLE_CHANNEL_BLUE = 0x03;
+
+        static final int SINGLE_CHANNEL_RGB = 0x04;
+
+        static final int SINGLE_CHANNEL_COLOR_TEMPERATURE = 0x05;
+
+    }
+
 }
