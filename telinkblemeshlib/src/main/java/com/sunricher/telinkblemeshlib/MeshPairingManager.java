@@ -1,6 +1,8 @@
 package com.sunricher.telinkblemeshlib;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.sunricher.telinkblemeshlib.db.MeshAddressManager;
@@ -9,8 +11,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import androidx.annotation.Nullable;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MeshPairingManager {
 
@@ -19,17 +21,20 @@ public class MeshPairingManager {
     private Callback callback;
     private MeshNetwork network;
     private Status status = Status.stopped;
-    // TODO: Timer
-    // milliseconds
-    private double connectingInterval = 8000;
-    private double scanningInterval = 2000;
-    private double setNetworkInterval = 4000;
-    private double waitingChangingAddressesInterval = 8000;
+
+    // milliseconds (ms)
+    private long connectingInterval = 8000;
+    private long scanningInterval = 2000;
+    private long setNetworkInterval = 4000;
+    private long waitingChangingAddressesInterval = 8000;
 
     // Key is macData string
-    private Map<String, PendingDeviceData> pendingDeviceDataMap = new HashMap<>();
+//    private Map<String, PendingData> pendingDataMap = new HashMap<>();
+    private List<PendingData> pendingDataList = new ArrayList<>();
     private List<Integer> availableAddressList = new ArrayList<>();
     private MeshNode connectNode;
+
+    private Timer timer;
 
     private MeshPairingManager() {
 
@@ -44,12 +49,13 @@ public class MeshPairingManager {
         this.network = network;
         this.callback = callback;
 
-        this.pendingDeviceDataMap.clear();
+        this.pendingDataList.clear();
         this.availableAddressList = MeshAddressManager.getInstance().getAvailableAddressList(network, context);
         Log.i(LOG_TAG, "availableAddressList count " + availableAddressList.size());
 
         if (this.availableAddressList.size() < 1) {
 
+            if (callback == null) return;
             this.callback.pairingFailed(this, FailedReason.noMoreNewAddresses);
             return;
         }
@@ -60,8 +66,8 @@ public class MeshPairingManager {
     public void stop() {
 
         status = Status.stopped;
-        // TODO: timer invalidate
-        pendingDeviceDataMap.clear();
+        cancelTimer();
+        pendingDataList.clear();
         availableAddressList.clear();
         connectNode = null;
         MeshManager.getInstance().stopScanNode();
@@ -72,66 +78,167 @@ public class MeshPairingManager {
 
         Log.i(LOG_TAG, "scanExistDevices");
 
-        // TODO: timer.invalidate
+        cancelTimer();
         status = Status.existDeviceScanning;
         connectNode = null;
         MeshManager.getInstance().scanNode(network);
 
-        // TODO: new timer
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+
+                Log.i(LOG_TAG, "scanExistDevices overtime, next.");
+                connectFactoryNetwork();
+            }
+        }, connectingInterval);
     }
 
     private void connectFactoryNetwork() {
 
         Log.i(LOG_TAG, "connectFactoryNetwork");
 
-        // TODO: timer.invalidate
+        cancelTimer();
         status = Status.factoryConnecting;
         connectNode = null;
         MeshManager.getInstance().scanNode(MeshNetwork.factory);
 
-        // TODO: new timer
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+
+                status = Status.stopped;
+                Log.i(LOG_TAG, "factoryConnecting failed, cancel.");
+                connectNode = null;
+                MeshManager.getInstance().stopScanNode();
+                MeshManager.getInstance().disconnect(false);
+
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (callback == null) return;
+                        callback.pairingFailed(MeshPairingManager.this, FailedReason.noNewDevices);
+                    }
+                });
+            }
+        }, connectingInterval);
     }
 
     private void scanAllMac() {
 
         Log.i(LOG_TAG, "scanAllMac");
 
-        // TODO: timer.invalidate
+        cancelTimer();
         status = Status.allMacScanning;
         MeshCommand cmd = MeshCommand.requestAddressMac(MeshCommand.Address.all);
         MeshManager.getInstance().send(cmd);
 
         // TODO: new timer
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+
+                Log.i(LOG_TAG, "allMacScanning no more devices, next. Change pending devices " + pendingDataList.size());
+                changePendingDevices();
+
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (callback == null) return;
+                        callback.didUpdateProgress(MeshPairingManager.this, 0.42);
+                    }
+                });
+            }
+        }, scanningInterval);
     }
 
     private void changePendingDevices() {
 
         Log.i(LOG_TAG, "changePendingDevices");
 
-        if (pendingDeviceDataMap.size() < 1) {
+        if (pendingDataList.size() < 1) {
 
             Log.i(LOG_TAG, "pendingDevices.count < 1, next .setNewNetwork");
             setNewNetwork();
             return;
         }
 
-        // TODO: timer.invalidate
+        cancelTimer();
         status = Status.addressChanging;
 
-        // TODO: Change pending devices address
+        double consumeInterval = pendingDataList.size() * 0.3;
 
-        // TODO: new timer
+        for (PendingData data : pendingDataList) {
+
+            byte[] macData =  data.macData;
+            int oldAddress = data.oldAddress;
+            int newAddress = data.newAddress;
+
+            MeshCommand cmd = MeshCommand.changeAddress(oldAddress, newAddress, macData);
+            MeshManager.getInstance().send(cmd);
+        }
+
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+
+                setNewNetwork();
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (callback == null) return;
+                        callback.didUpdateProgress(MeshPairingManager.this, 0.56);
+                    }
+                });
+            }
+        }, waitingChangingAddressesInterval + connectingInterval);
     }
 
     private void setNewNetwork() {
 
         Log.i(LOG_TAG, "setNewNetwork");
 
-        // TODO: timer.invalidate
+        cancelTimer();
         status = Status.networkSetting;
         // TODO: MeshManager.getInstance().setNewNetwork(network)
 
-        // TODO: new timer
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+
+                status = Status.networkConnecting;
+                Log.i(LOG_TAG, "networkSetting OK, next, networkConnecting");
+                connectNode = null;
+                MeshManager.getInstance().scanNode(network);
+
+                cancelTimer();
+                timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+
+                        status = Status.stopped;
+                        Log.i(LOG_TAG, "networkConnecting failed, cancel.");
+                        connectNode = null;
+                        MeshManager.getInstance().stopScanNode();
+                        MeshManager.getInstance().disconnect(false);
+
+                        if (callback == null) return;
+                        callback.pairingFailed(MeshPairingManager.this, FailedReason.noNewDevices);
+                    }
+                }, connectingInterval);
+
+                if (callback == null) return;
+                callback.didUpdateProgress(MeshPairingManager.this, 0.70);
+            }
+        }, setNetworkInterval);
     }
 
     private void scanNetworkDevices() {
@@ -167,6 +274,19 @@ public class MeshPairingManager {
         return 0;
     }
 
+    private void startTimer() {
+
+
+    }
+
+    private void cancelTimer() {
+
+        if (timer != null) {
+            timer.cancel();
+        }
+        timer = null;
+    }
+
     public enum FailedReason {
 
         noMoreNewAddresses, noNewDevices
@@ -193,13 +313,13 @@ public class MeshPairingManager {
 
         public abstract void didUpdateNewDevice(MeshPairingManager manager, MeshDevice meshDevice);
 
-        public abstract void didUpdateProgress(MeshPairingManager manager, float progress);
+        public abstract void didUpdateProgress(MeshPairingManager manager, double progress);
 
         public abstract void didFinishPairing(MeshAddressManager manager);
 
     }
 
-    class PendingDeviceData {
+    private class PendingData {
         byte[] macData;
         int oldAddress;
         int newAddress;

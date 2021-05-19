@@ -67,6 +67,10 @@ public class MeshDevice {
         return state;
     }
 
+    public void setState(State state) {
+        this.state = state;
+    }
+
     public int getAddress() {
         return address;
     }
@@ -83,8 +87,16 @@ public class MeshDevice {
         return brightness;
     }
 
+    public void setBrightness(int brightness) {
+        this.brightness = brightness;
+    }
+
     public String getVersion() {
         return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public enum State {
