@@ -101,6 +101,7 @@ public class MeshCommand {
 
         MeshCommand cmd = new MeshCommand();
         cmd.tag = Const.TAG_REPLACE_ADDRESS;
+        cmd.src = 0;
         cmd.dst = address;
         cmd.param = newAddress & 0xFF;
         cmd.userData[0] = 0x00;
@@ -287,7 +288,7 @@ public class MeshCommand {
         int seqNo = this.increaseSeqNo();
         data[0] = (byte) ((seqNo >> 16) & 0xFF);
         data[1] = (byte) ((seqNo >> 8) & 0xFF);
-        data[2] = (byte) (seqNo & 0xFF);
+        data[2] = (byte) ((seqNo) & 0xFF);
 
         data[3] = (byte) (src & 0xFF);
         data[4] = (byte) ((src >> 8) & 0xFF);

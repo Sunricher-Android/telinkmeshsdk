@@ -2,10 +2,15 @@ package com.sunricher.telinkblemeshlib;
 
 import android.util.Log;
 
+import com.clj.fastble.callback.BleWriteCallback;
+import com.clj.fastble.exception.BleException;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 class MeshCommandExecutor {
+
+    private static final String LOG_TAG = "MeshCommandExecutor";
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -32,7 +37,7 @@ class MeshCommandExecutor {
         });
     }
 
-    void executeCommand(MeshCommand command) {
+    void executeCommand(MeshCommand command, boolean withoutResponse, long interval) {
 
         executorService.execute(new Runnable() {
             @Override
@@ -40,8 +45,30 @@ class MeshCommandExecutor {
 
                 try {
 
+//                    if (withoutResponse) {
+//
+//                        MeshManager.getInstance().write(MeshNode.UUID.accessService, MeshNode.UUID.commandCharacteristic, command.getCommandData(), new BleWriteCallback() {
+//                            @Override
+//                            public void onWriteSuccess(int current, int total, byte[] justWrite) {
+//
+//                                Log.i(LOG_TAG, "without response success");
+//                            }
+//
+//                            @Override
+//                            public void onWriteFailure(BleException exception) {
+//
+//                                Log.i(LOG_TAG, "without response error " + exception.getDescription());
+//                            }
+//                        });
+//
+//                    } else {
+//
+//                        MeshManager.getInstance().writeCommand(command);
+//                    }
+
                     MeshManager.getInstance().writeCommand(command);
-                    Thread.sleep(300);
+
+                    Thread.sleep(interval);
 
                 } catch (InterruptedException e) {
 

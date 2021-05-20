@@ -2,6 +2,10 @@ package com.sunricher.telinkblemeshlib;
 
 import android.app.Application;
 import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.clj.fastble.BleManager;
@@ -70,6 +74,14 @@ public final class MeshManager {
 
     private MeshCommandExecutor commandExecutor = new MeshCommandExecutor();
     private SampleCommandCenter sampleCommandCenter = new SampleCommandCenter();
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    private SetNetworkState setNetworkState = SetNetworkState.none;
+    private byte[] factoryLtk = new byte[]{
+            (byte) 0xC0, (byte) 0xC1, (byte) 0xC2, (byte) 0xC3, (byte) 0xC4,
+            (byte) 0xC5, (byte) 0xC6, (byte) 0xC7, (byte) 0xD8, (byte) 0xD9,
+            (byte) 0xDA, (byte) 0xDB, (byte) 0xDC, (byte) 0xDD, (byte) 0xDE,
+            (byte) 0xDF};
 
     private MeshManager() {
         Log.i(LOG_TAG, "created");
@@ -87,7 +99,7 @@ public final class MeshManager {
 
         BleManager.getInstance()
                 .enableLog(true)
-                .setReConnectCount(1, 5000)
+                .setReConnectCount(3, 5000)
                 .setSplitWriteNum(20)
                 .setConnectOverTime(10000)
                 .setOperateTimeout(5000);
@@ -225,36 +237,174 @@ public final class MeshManager {
         sampleCommandCenter.append(command);
     }
 
+    /**
+     * Send command with response, interval 300.
+     *
+     * @param command
+     */
     public void send(MeshCommand command) {
 
-        this.commandExecutor.executeCommand(command);
+        this.send(command, 300, true);
+    }
+
+    public void send(MeshCommand command, long interval, boolean withoutResponse) {
+
+        this.commandExecutor.executeCommand(command, withoutResponse, interval);
+    }
+
+    void setNewNetwork(MeshNetwork newNetwork) {
+
+        setNetworkState = SetNetworkState.processing;
+        Log.i(LOG_TAG, "setNetNetwork " + newNetwork.getName() + ", " + newNetwork.getPassword());
+
+        byte[] nn;
+        byte[] pwd;
+        byte[] ltk;
+
+        try {
+
+            nn = AES.encrypt(this.sessionKey, newNetwork.getMeshName());
+            pwd = AES.encrypt(this.sessionKey, newNetwork.getMeshPassword());
+            ltk = AES.encrypt(this.sessionKey, this.factoryLtk);
+
+            Arrays.reverse(nn, 0, nn.length - 1);
+            Arrays.reverse(pwd, 0, pwd.length - 1);
+            Arrays.reverse(ltk, 0, ltk.length - 1);
+
+        } catch (InvalidKeyException | NoSuchAlgorithmException
+                | NoSuchPaddingException | UnsupportedEncodingException
+                | IllegalBlockSizeException | BadPaddingException
+                | NoSuchProviderException e) {
+
+            return;
+        }
+
+        byte[] nnData = new byte[20];
+        nnData[0] = Opcode.BLE_GATT_OP_PAIR_NETWORK_NAME.getValue();
+        System.arraycopy(nn, 0, nnData, 1, nn.length);
+
+        byte[] pwdData = new byte[20];
+        pwdData[0] = Opcode.BLE_GATT_OP_PAIR_PASS.getValue();
+        System.arraycopy(pwd, 0, pwdData, 1, pwd.length);
+
+        byte[] ltkData = new byte[20];
+        ltkData[0] = Opcode.BLE_GATT_OP_PAIR_LTK.getValue();
+//        ltkData[17] = 0x01;
+        System.arraycopy(ltk, 0, ltkData, 1, ltk.length);
+
+        UUID serviceUUID = MeshNode.UUID.accessService;
+        UUID pairUUID = MeshNode.UUID.pairingCharacteristic;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                BleWriteCallback writeCallback = new BleWriteCallback() {
+                    @Override
+                    public void onWriteSuccess(int current, int total, byte[] justWrite) {
+
+                        Log.i(LOG_TAG, "setNetwork onWriteSuccess");
+                    }
+
+                    @Override
+                    public void onWriteFailure(BleException exception) {
+
+                        Log.i(LOG_TAG, "setNetwork onWriteFailure " + exception.getDescription());
+                    }
+                };
+                try {
+
+                    Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(nnData));
+                    Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(pwdData));
+                    Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(ltkData));
+
+                    MeshManager.this.write(serviceUUID, pairUUID, nnData, writeCallback);
+                    Thread.sleep(300);
+
+                    MeshManager.this.write(serviceUUID, pairUUID, pwdData, writeCallback);
+                    Thread.sleep(300);
+
+                    MeshManager.this.write(serviceUUID, pairUUID, ltkData, writeCallback);
+                    Thread.sleep(300);
+
+                    MeshManager.this.read(serviceUUID, pairUUID, new BleReadCallback() {
+                        @Override
+                        public void onReadSuccess(byte[] data) {
+
+                            MeshManager.this.setNetworkState = SetNetworkState.none;
+                            Log.i(LOG_TAG, "setNetwork onReadSuccess pairUUID " + HexUtil.encodeHexStr(data));
+
+                            if (data.length > 0 && data[0] == 0x07) {
+
+                                Log.i(LOG_TAG, "setNetworkState success");
+                                MeshManager.this.read(MeshNode.UUID.deviceInformationService, MeshNode.UUID.firmwareCharacteristic, new BleReadCallback() {
+                                    @Override
+                                    public void onReadSuccess(byte[] data) {
+
+                                        Log.i(LOG_TAG, "setNetwork onReadSuccess firmwareCharacteristic " + HexUtil.encodeHexStr(data));
+                                    }
+
+                                    @Override
+                                    public void onReadFailure(BleException exception) {
+
+                                        Log.i(LOG_TAG, "setNetwork onReadFailure " + exception.getDescription());
+                                    }
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onReadFailure(BleException exception) {
+
+                            Log.i(LOG_TAG, "setNetwork onReadFailure " + exception.getDescription());
+                        }
+                    });
+                    Thread.sleep(300);
+
+                } catch (InterruptedException e) {
+
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
     }
 
     public Boolean getLogin() {
         return isLogin;
     }
 
-    void writeCommand(MeshCommand command) {
-
-        if (!this.isConnected()) {
-            return;
-        }
-
-        byte[] commandData = command.getCommandData();
-
-        byte[] sk = this.sessionKey;
-        int sn = command.getSeqNo();
-
-        Log.i(LOG_TAG, "send command " + HexUtil.encodeHexStr(commandData));
-
-        byte[] macAddress = this.macBytes;
-        byte[] nonce = this.getSecIVM(macAddress, sn);
-        byte[] data = AES.encrypt(sk, nonce, commandData);
-
-        this.write(MeshNode.UUID.accessService, MeshNode.UUID.commandCharacteristic, data, commandWriteCallback);
+    public MeshNode getConnectNode() {
+        return connectNode;
     }
 
-    private void write(UUID service, UUID characteristic, byte[] data, BleWriteCallback callback) {
+    void writeCommand(MeshCommand command) {
+
+        this.mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+
+                if (!MeshManager.this.isConnected()) {
+                    return;
+                }
+
+                byte[] commandData = command.getCommandData();
+
+                byte[] sk = MeshManager.this.sessionKey;
+                int sn = command.getSeqNo();
+
+                Log.i(LOG_TAG, "send command " + HexUtil.encodeHexStr(commandData));
+
+                byte[] macAddress = MeshManager.this.macBytes;
+                byte[] nonce = MeshManager.this.getSecIVM(macAddress, sn);
+                byte[] data = AES.encrypt(sk, nonce, commandData);
+
+                MeshManager.this.write(MeshNode.UUID.accessService, MeshNode.UUID.commandCharacteristic, data, commandWriteCallback);
+            }
+        });
+    }
+
+    void write(UUID service, UUID characteristic, byte[] data, BleWriteCallback callback) {
 
         if (!this.isConnected()) {
 
@@ -262,11 +412,11 @@ public final class MeshManager {
             return;
         }
 
-        BleDevice bleDevice = this.connectNode.getBleDevice();
+        BleDevice bleDevice = MeshManager.this.connectNode.getBleDevice();
         BleManager.getInstance().write(bleDevice, service.toString(), characteristic.toString(), data, false, callback);
     }
 
-    private void read(UUID service, UUID characteristic, BleReadCallback callback) {
+    void read(UUID service, UUID characteristic, BleReadCallback callback) {
 
         if (!this.isConnected()) {
 
@@ -274,8 +424,14 @@ public final class MeshManager {
             return;
         }
 
-        BleDevice bleDevice = this.connectNode.getBleDevice();
-        BleManager.getInstance().read(bleDevice, service.toString(), characteristic.toString(), callback);
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+
+                BleDevice bleDevice = MeshManager.this.connectNode.getBleDevice();
+                BleManager.getInstance().read(bleDevice, service.toString(), characteristic.toString(), callback);
+            }
+        });
     }
 
     private void reconnect() {
@@ -628,6 +784,17 @@ public final class MeshManager {
                         MeshNode.UUID.notifyCharacteristic.toString(),
                         MeshManager.this.notifyCallback);
 
+                List<BluetoothGattService> services = BleManager.getInstance().getBluetoothGattServices(bleDevice);
+                for (BluetoothGattService service : services) {
+                    if (service.getUuid().toString().equals(MeshNode.UUID.accessService.toString())) {
+                        BluetoothGattCharacteristic commandCharacteristic = service.getCharacteristic(MeshNode.UUID.commandCharacteristic);
+                        if (commandCharacteristic != null) {
+                            commandCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+                            Log.w(LOG_TAG, "set commandCharacteristic writeType WRITE_TYPE_NO_RESPONSE");
+                        }
+                    }
+                }
+
                 MeshManager.this.login();
             }
 
@@ -702,7 +869,7 @@ public final class MeshManager {
             @Override
             public void onWriteSuccess(int current, int total, byte[] justWrite) {
                 Log.i(LOG_TAG, "commandWriteCallback onWriteSuccess");
-                MeshManager.this.read(MeshNode.UUID.accessService, MeshNode.UUID.commandCharacteristic, MeshManager.this.commandReadCallback);
+                // !!! DO NOT READ WITHOUT RESPONSE
             }
 
             @Override
@@ -832,6 +999,10 @@ public final class MeshManager {
         if (nodeCallback != null) {
             nodeCallback.didGetMac(this, macData, newAddress);
         }
+    }
+
+    private enum SetNetworkState {
+        none, processing
     }
 
     private static class MeshManagerHolder {

@@ -8,39 +8,43 @@ import java.util.List;
 
 public class MeshAddressManager {
 
+    private MeshAddressDatabase database;
+
     private MeshAddressManager() {
 
     }
 
-    public static MeshAddressManager getInstance() {
+    public static MeshAddressManager getInstance(Context context) {
+        
+        SingletonHolder.instance.database = MeshAddressDatabase.getInstance(context);
         return SingletonHolder.instance;
     }
 
-    public List<Integer> getExistsAddressList(MeshNetwork network, Context context) {
-        return MeshAddressDatabase.getInstance(context).getExistsAddressList(network);
+    public List<Integer> getExistsAddressList(MeshNetwork network) {
+        return database.getExistsAddressList(network);
     }
 
-    public List<Integer> getAvailableAddressList(MeshNetwork network, Context context) {
-        return MeshAddressDatabase.getInstance(context).getAvailableAddressList(network);
+    public List<Integer> getAvailableAddressList(MeshNetwork network) {
+        return database.getAvailableAddressList(network);
     }
 
-    public void append(int address, MeshNetwork network, Context context) {
+    public void append(int address, MeshNetwork network) {
         if (address > 255 || address < 1) {
             return;
         }
-        MeshAddressDatabase.getInstance(context).append(address, network);
+        database.append(address, network);
     }
 
-    public void remove(int address, MeshNetwork network, Context context) {
-        MeshAddressDatabase.getInstance(context).remove(address, network);
+    public void remove(int address, MeshNetwork network) {
+        database.remove(address, network);
     }
 
-    public void clear(MeshNetwork network, Context context) {
-        MeshAddressDatabase.getInstance(context).clear(network);
+    public void clear(MeshNetwork network) {
+        database.clear(network);
     }
 
-    public boolean isExists(int address, MeshNetwork network, Context context) {
-        return MeshAddressDatabase.getInstance(context).isExists(address, network);
+    public boolean isExists(int address, MeshNetwork network) {
+        return database.isExists(address, network);
     }
 
     private static class SingletonHolder {

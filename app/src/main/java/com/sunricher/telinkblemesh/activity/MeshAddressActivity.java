@@ -28,16 +28,10 @@ public class MeshAddressActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        MeshAddressManager.getInstance().append(255, network, this);
-        MeshAddressManager.getInstance().append(254, network, this);
-        MeshAddressManager.getInstance().append(252, network, this);
-        MeshAddressManager.getInstance().append(0, network, this);
-        MeshAddressManager.getInstance().append(256, network, this);
-
         MeshAddressAdapter adapter = new MeshAddressAdapter();
-        List<Integer> existsList = MeshAddressManager.getInstance().getExistsAddressList(network, this);
+        List<Integer> existsList = MeshAddressManager.getInstance(this).getExistsAddressList(network);
         adapter.setExistAddressList(existsList);
-        List<Integer> availableList = MeshAddressManager.getInstance().getAvailableAddressList(network, this);
+        List<Integer> availableList = MeshAddressManager.getInstance(this).getAvailableAddressList(network);
         adapter.setAvailableAddressList(availableList);
         recyclerView.setAdapter(adapter);
 
@@ -45,7 +39,7 @@ public class MeshAddressActivity extends AppCompatActivity {
             @Override
             public void onItemClick(MeshAddressAdapter.ViewHolder holder, int position, int address) {
 
-                MeshAddressManager.getInstance().remove(address, network, MeshAddressActivity.this);
+                MeshAddressManager.getInstance(MeshAddressActivity.this).remove(address, network);
                 adapter.removeAt(position);
                 adapter.notifyDataSetChanged();
             }

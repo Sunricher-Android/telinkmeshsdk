@@ -17,6 +17,7 @@ import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
 import com.sunricher.telinkblemeshlib.MeshNetwork;
 import com.sunricher.telinkblemeshlib.MeshNode;
+import com.sunricher.telinkblemeshlib.MeshPairingManager;
 import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
 import com.sunricher.telinkblemeshlib.callback.NodeCallback;
 
@@ -29,7 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class AndroidTelinkActivity extends AppCompatActivity {
 
-    public static final MeshNetwork network = new MeshNetwork("android_telink", "123456");
+    public static final MeshNetwork network = new MeshNetwork("srlink", "123456");
     private static final String LOG_TAG = "AndroidTelinkActivity";
 
     private TextView stateLabel;
@@ -155,9 +156,35 @@ public class AndroidTelinkActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                Intent intent = new Intent(AndroidTelinkActivity.this, AddDeviceActivity.class);
-                AddDeviceActivity.network = network;
-                AndroidTelinkActivity.this.startActivity(intent);
+                MeshPairingManager.getInstance().startPairing(network, AndroidTelinkActivity.this.getApplication(), new MeshPairingManager.Callback() {
+                    @Override
+                    public void pairingFailed(MeshPairingManager manager, MeshPairingManager.FailedReason reason) {
+
+                        Log.i(LOG_TAG, "pairingFailed " + reason);
+                    }
+
+                    @Override
+                    public void didAddNewDevices(MeshPairingManager manager, ArrayList<MeshDevice> meshDevices) {
+
+                        Log.i(LOG_TAG, "didAddNewDevices " + meshDevices.size());
+                    }
+
+                    @Override
+                    public void didUpdateProgress(MeshPairingManager manager, double progress) {
+
+                        Log.i(LOG_TAG, "didUpdateProgress " + progress);
+                    }
+
+                    @Override
+                    public void didFinishPairing(MeshPairingManager manager) {
+
+                        Log.i(LOG_TAG, "didFinishPairing");
+                    }
+                });
+
+//                Intent intent = new Intent(AndroidTelinkActivity.this, AddDeviceActivity.class);
+//                AddDeviceActivity.network = network;
+//                AndroidTelinkActivity.this.startActivity(intent);
             }
         });
     }
