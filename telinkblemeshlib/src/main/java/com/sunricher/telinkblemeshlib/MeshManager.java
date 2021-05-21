@@ -244,12 +244,12 @@ public final class MeshManager {
      */
     public void send(MeshCommand command) {
 
-        this.send(command, 300, true);
+        this.send(command, 300);
     }
 
-    public void send(MeshCommand command, long interval, boolean withoutResponse) {
+    public void send(MeshCommand command, long interval) {
 
-        this.commandExecutor.executeCommand(command, withoutResponse, interval);
+        this.commandExecutor.executeCommand(command, interval);
     }
 
     void setNewNetwork(MeshNetwork newNetwork) {
@@ -368,6 +368,10 @@ public final class MeshManager {
             }
         }).start();
 
+    }
+
+    public Boolean isBlueEnable() {
+        return BleManager.getInstance().isBlueEnable();
     }
 
     public Boolean getLogin() {

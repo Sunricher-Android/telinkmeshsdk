@@ -37,7 +37,7 @@ class MeshCommandExecutor {
         });
     }
 
-    void executeCommand(MeshCommand command, boolean withoutResponse, long interval) {
+    void executeCommand(MeshCommand command, long interval) {
 
         executorService.execute(new Runnable() {
             @Override
@@ -45,29 +45,7 @@ class MeshCommandExecutor {
 
                 try {
 
-//                    if (withoutResponse) {
-//
-//                        MeshManager.getInstance().write(MeshNode.UUID.accessService, MeshNode.UUID.commandCharacteristic, command.getCommandData(), new BleWriteCallback() {
-//                            @Override
-//                            public void onWriteSuccess(int current, int total, byte[] justWrite) {
-//
-//                                Log.i(LOG_TAG, "without response success");
-//                            }
-//
-//                            @Override
-//                            public void onWriteFailure(BleException exception) {
-//
-//                                Log.i(LOG_TAG, "without response error " + exception.getDescription());
-//                            }
-//                        });
-//
-//                    } else {
-//
-//                        MeshManager.getInstance().writeCommand(command);
-//                    }
-
                     MeshManager.getInstance().writeCommand(command);
-
                     Thread.sleep(interval);
 
                 } catch (InterruptedException e) {

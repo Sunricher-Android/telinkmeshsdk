@@ -136,7 +136,6 @@ public class MeshPairingManager {
 
     private void scanAllMac() {
 
-        progress = Math.max(0.42, progress);
 
         Log.i(LOG_TAG, "scanAllMac");
         pendingDataList.clear();
@@ -144,7 +143,6 @@ public class MeshPairingManager {
         cancelTimer();
         status = Status.allMacScanning;
         MeshCommand cmd = MeshCommand.requestAddressMac(MeshCommand.Address.all);
-//        MeshCommand cmd = MeshCommand.requestMacDeviceType(MeshCommand.Address.all);
         MeshManager.getInstance().send(cmd);
 
         timer = new Timer();
@@ -160,6 +158,7 @@ public class MeshPairingManager {
                     @Override
                     public void run() {
 
+                        progress = Math.max(0.42, progress);
                         callback.didUpdateProgress(MeshPairingManager.this, progress);
                     }
                 });
@@ -191,7 +190,7 @@ public class MeshPairingManager {
             int newAddress = data.newAddress;
 
             MeshCommand cmd = MeshCommand.changeAddress(oldAddress, newAddress, macData);
-            MeshManager.getInstance().send(cmd, (long) itemInterval, true);
+            MeshManager.getInstance().send(cmd, (long) itemInterval);
             addressManager.append(newAddress, network);
         }
 
@@ -329,6 +328,15 @@ public class MeshPairingManager {
             @Override
             public void didDiscoverNode(MeshManager manager, MeshNode node) {
 
+                if (callback == null) return;
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        progress = Math.max(progress, 0.16);
+                        callback.didUpdateProgress(MeshPairingManager.this, progress);
+                    }
+                });
             }
 
             @Override
