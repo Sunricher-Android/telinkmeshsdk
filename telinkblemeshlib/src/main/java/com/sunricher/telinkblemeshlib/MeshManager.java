@@ -350,6 +350,20 @@ public final class MeshManager {
                                         Log.i(LOG_TAG, "setNetwork onReadFailure " + exception.getDescription());
                                     }
                                 });
+
+                            }
+
+                            if (MeshManager.this.nodeCallback == null) return;
+                            if (data.length > 0) {
+
+                                boolean isSuccess = data[0] == 0x07;
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        MeshManager.this.nodeCallback.didConfirmNewNetwork(MeshManager.this, isSuccess);
+                                    }
+                                });
                             }
                         }
 
