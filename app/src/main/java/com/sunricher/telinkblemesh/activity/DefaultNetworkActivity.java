@@ -162,4 +162,10 @@ public class DefaultNetworkActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        MeshManager.getInstance().disconnect(false);
+    }
 }

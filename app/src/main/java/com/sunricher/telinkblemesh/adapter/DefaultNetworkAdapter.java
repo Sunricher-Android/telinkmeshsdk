@@ -126,4 +126,8 @@ public class DefaultNetworkAdapter extends RecyclerView.Adapter<DefaultNetworkAd
     public void setClickListener(OnClickListener clickListener) {
         this.clickListener = clickListener;
     }
+
+    public ArrayList<MyDevice> getDevices() {
+        return devices;
+    }
 }

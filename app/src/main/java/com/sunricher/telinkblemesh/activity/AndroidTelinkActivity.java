@@ -22,6 +22,7 @@ import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
 import com.sunricher.telinkblemeshlib.callback.NodeCallback;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -156,35 +157,15 @@ public class AndroidTelinkActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                MeshPairingManager.getInstance().startPairing(network, AndroidTelinkActivity.this.getApplication(), new MeshPairingManager.Callback() {
-                    @Override
-                    public void pairingFailed(MeshPairingManager manager, MeshPairingManager.FailedReason reason) {
-
-                        Log.i(LOG_TAG, "pairingFailed " + reason);
-                    }
-
-                    @Override
-                    public void didAddNewDevices(MeshPairingManager manager, ArrayList<MeshDevice> meshDevices) {
-
-                        Log.i(LOG_TAG, "didAddNewDevices " + meshDevices.size());
-                    }
-
-                    @Override
-                    public void didUpdateProgress(MeshPairingManager manager, double progress) {
-
-                        Log.i(LOG_TAG, "didUpdateProgress " + progress);
-                    }
-
-                    @Override
-                    public void didFinishPairing(MeshPairingManager manager) {
-
-                        Log.i(LOG_TAG, "didFinishPairing");
-                    }
-                });
-
-//                Intent intent = new Intent(AndroidTelinkActivity.this, AddDeviceActivity.class);
-//                AddDeviceActivity.network = network;
-//                AndroidTelinkActivity.this.startActivity(intent);
+                Intent intent = new Intent(AndroidTelinkActivity.this, AddDeviceActivity.class);
+                AddDeviceActivity.network = network;
+                List<Integer> addressList = new ArrayList<>();
+                List<MyDevice> deviceList = adapter.getDevices();
+                for (MyDevice device : deviceList) {
+                    addressList.add(device.getMeshDevice().getAddress());
+                }
+                AddDeviceActivity.existList = addressList;
+                AndroidTelinkActivity.this.startActivity(intent);
             }
         });
     }
@@ -221,6 +202,13 @@ public class AndroidTelinkActivity extends AppCompatActivity {
                 MeshManager.getInstance().send(cmd);
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        MeshManager.getInstance().disconnect(false);
     }
 
 }
