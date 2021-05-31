@@ -56,7 +56,15 @@ public class MeshDeviceType {
                 break;
 
             case 0x50:
-                this.category = Category.bridge;
+
+                if (rawValue2 == 0x02) {
+
+                    this.category = Category.rfPa;
+
+                } else {
+
+                    this.category = Category.bridge;
+                }
                 break;
 
             case 0x09:
@@ -73,12 +81,10 @@ public class MeshDeviceType {
         switch (subDeviceType) {
 
             // OnOff
-            case 0x08:
             case 0x12:
             case 0x14:
             case 0x30:
-            case 0x36:
-            case 0x37:
+            case 0x60:
                 capabilities.add(Capability.onOff);
                 break;
 
@@ -87,13 +93,19 @@ public class MeshDeviceType {
             case 0x13:
             case 0x31:
             case 0x38:
+            case 0x61:
+            case 0x36:
+            case 0x66:
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
                 break;
 
                 // CCT
+            case 0x08:
             case 0x32:
+            case 0x37:
             case 0x39:
+            case 0x62:
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
                 capabilities.add(Capability.colorTemperature);
@@ -101,6 +113,7 @@ public class MeshDeviceType {
 
                 // RGB
             case 0x33:
+            case 0x63:
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
                 capabilities.add(Capability.rgb);
@@ -108,6 +121,7 @@ public class MeshDeviceType {
 
                 // RGBW
             case 0x34:
+            case 0x64:
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
                 capabilities.add(Capability.rgb);
@@ -116,6 +130,7 @@ public class MeshDeviceType {
 
                 // RGB CCT
             case 0x35:
+            case 0x65:
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
                 capabilities.add(Capability.rgb);
@@ -171,6 +186,9 @@ public class MeshDeviceType {
             case bridge:
                 return "Bridge";
 
+            case rfPa:
+                return "RF PA";
+
             default:
                 return "Unsupported";
         }
@@ -209,6 +227,7 @@ public class MeshDeviceType {
         curtain,
         outlet,
         bridge,
+        rfPa,
         unsupported,
     }
 

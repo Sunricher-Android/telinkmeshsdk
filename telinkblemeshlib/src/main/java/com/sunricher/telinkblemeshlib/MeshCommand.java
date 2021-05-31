@@ -1,5 +1,8 @@
 package com.sunricher.telinkblemeshlib;
 
+import java.util.Calendar;
+import java.util.Locale;
+
 public class MeshCommand {
 
     /**
@@ -271,6 +274,40 @@ public class MeshCommand {
         return cmd;
     }
 
+    public static MeshCommand syncDatetime(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_SYNC_DATETIME;
+        cmd.dst = address;
+
+        Calendar cal = Calendar.getInstance(Locale.getDefault());
+
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH) + 1;
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        int minute = cal.get(Calendar.MINUTE);
+        int second = cal.get(Calendar.SECOND);
+
+        cmd.param = (year & 0xFF);
+        cmd.userData[0] = (byte) ((year >> 8) & 0xFF);
+        cmd.userData[1] = (byte) (month & 0xFF);
+        cmd.userData[2] = (byte) (day & 0xFF);
+        cmd.userData[3] = (byte) (hour & 0xFF);
+        cmd.userData[4] = (byte) (minute & 0xFF);
+        cmd.userData[5] = (byte) (second & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand getDatetime(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_GET_DATETIME;
+        cmd.dst = address;
+        cmd.param = 0x10;
+        return cmd;
+    }
+
     private int increaseSeqNo() {
 
         seqNo += 1;
@@ -362,6 +399,12 @@ public class MeshCommand {
         static final int TAG_GET_MAC_NOTIFY = 0xE1;
 
         static final int TAG_RESET_NETWORK = 0xE3;
+
+        static final int TAG_SYNC_DATETIME = 0xE4;
+
+        static final int TAG_GET_DATETIME = 0xE8;
+
+        static final int TAG_DATETIME_RESPONSE = 0xE9;
 
 
         static final int SR_IDENTIFIER_MAC = 0x76;

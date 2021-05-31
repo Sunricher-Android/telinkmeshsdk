@@ -16,9 +16,18 @@ import android.widget.Toast;
 import com.sunricher.telinkblemesh.R;
 import com.sunricher.telinkblemesh.model.MyDevice;
 import com.sunricher.telinkblemeshlib.MeshCommand;
+import com.sunricher.telinkblemeshlib.MeshDevice;
+import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
+import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -77,6 +86,44 @@ public class DeviceSettingsActivity extends AppCompatActivity {
                 MeshManager.getInstance().send(cmd);
 
                 Toast.makeText(DeviceSettingsActivity.this, "Reset OK, restart all devices after resetting the network.", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        Button syncDatetimeButton = findViewById(R.id.sync_datetime_btn);
+        syncDatetimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MeshCommand cmd = MeshCommand.syncDatetime(device.getMeshDevice().getAddress());
+                MeshManager.getInstance().send(cmd);
+            }
+        });
+
+        Button getDatetimeButton = findViewById(R.id.get_datetime_btn);
+        getDatetimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MeshManager.getInstance().setDeviceCallback(new DeviceCallback() {
+                    @Override
+                    public void didUpdateMeshDevices(MeshManager manager, ArrayList<MeshDevice> meshDevices) {
+
+                    }
+
+                    @Override
+                    public void didUpdateDeviceType(MeshManager manager, int deviceAddress, MeshDeviceType deviceType, byte[] macData) {
+
+                    }
+
+                    @Override
+                    public void didGetDate(MeshManager manager, int address, Date date) {
+
+                        SimpleDateFormat dft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                        String dateString = dft.format(date);
+
+                        Toast.makeText(DeviceSettingsActivity.this, "Datetime: " + dateString, Toast.LENGTH_LONG).show();
+                    }
+                });
+                MeshCommand cmd = MeshCommand.getDatetime(device.getMeshDevice().getAddress());
+                MeshManager.getInstance().send(cmd);
             }
         });
     }

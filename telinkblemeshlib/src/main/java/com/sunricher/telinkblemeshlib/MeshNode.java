@@ -19,6 +19,7 @@ public class MeshNode {
     private int productId;
     private int shortAddress;
     private int rssi;
+    private MeshDeviceType deviceType;
 
     private MeshNode() {
 
@@ -66,6 +67,8 @@ public class MeshNode {
         byte[] shortAddressBytes = {manufacturerData[10], manufacturerData[9]};
         node.shortAddress = Integer.parseInt(HexUtil.encodeHexStr(shortAddressBytes), 16);
         node.rssi = rssi;
+
+        node.deviceType = new MeshDeviceType((node.productId >> 8) & 0xFF, node.productId & 0xFF);
 
         Log.i(LOG_TAG, node.getDescription());
 
@@ -149,6 +152,10 @@ public class MeshNode {
 
     public void setRssi(int rssi) {
         this.rssi = rssi;
+    }
+
+    public MeshDeviceType getDeviceType() {
+        return deviceType;
     }
 
     final static class UUID {

@@ -33,7 +33,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
 
@@ -49,16 +52,14 @@ public final class MeshManager {
     private static final int TAG_LOGIN_READ = 2;
 
     private final byte[] loginRandm = new byte[8];
-
+    long sendingTimeInterval = 300;
     private MeshNetwork network;
-
     private Boolean isAutoLogin;
     private Boolean isScanIgnoreName;
     private Boolean isLogin;
     private MeshNode connectNode;
     private NodeCallback nodeCallback;
     private DeviceCallback deviceCallback;
-
     private BleScanCallback scanCallback;
     private BleGattCallback gattCallback;
     private BleNotifyCallback notifyCallback;
@@ -67,15 +68,12 @@ public final class MeshManager {
     private BleReadCallback commandReadCallback;
     private BleWriteCallback notifyWriteCallback;
     private BleWriteCallback commandWriteCallback;
-
     private byte[] sessionKey;
     private Random random = new SecureRandom();
     private byte[] macBytes;
-
     private MeshCommandExecutor commandExecutor = new MeshCommandExecutor();
     private SampleCommandCenter sampleCommandCenter = new SampleCommandCenter();
     private Handler mainHandler = new Handler(Looper.getMainLooper());
-
     private SetNetworkState setNetworkState = SetNetworkState.none;
     private byte[] factoryLtk = new byte[]{
             (byte) 0xC0, (byte) 0xC1, (byte) 0xC2, (byte) 0xC3, (byte) 0xC4,
@@ -171,6 +169,7 @@ public final class MeshManager {
 
     public void connect(MeshNode node) {
 
+        this.updateSendingTimeInterval(node);
         this.sampleCommandCenter.clear();
 
         if (!BleManager.getInstance().isBlueEnable()) {
@@ -238,13 +237,13 @@ public final class MeshManager {
     }
 
     /**
-     * Send command with response, interval 300.
+     * Send command with response, interval sendIngTimeInterval.
      *
      * @param command
      */
     public void send(MeshCommand command) {
 
-        this.send(command, 300);
+        this.send(command, sendingTimeInterval);
     }
 
     public void send(MeshCommand command, long interval) {
@@ -319,13 +318,13 @@ public final class MeshManager {
                     Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(ltkData));
 
                     MeshManager.this.write(serviceUUID, pairUUID, nnData, writeCallback);
-                    Thread.sleep(300);
+                    Thread.sleep(sendingTimeInterval);
 
                     MeshManager.this.write(serviceUUID, pairUUID, pwdData, writeCallback);
-                    Thread.sleep(300);
+                    Thread.sleep(sendingTimeInterval);
 
                     MeshManager.this.write(serviceUUID, pairUUID, ltkData, writeCallback);
-                    Thread.sleep(300);
+                    Thread.sleep(sendingTimeInterval);
 
                     MeshManager.this.read(serviceUUID, pairUUID, new BleReadCallback() {
                         @Override
@@ -373,7 +372,7 @@ public final class MeshManager {
                             Log.i(LOG_TAG, "setNetwork onReadFailure " + exception.getDescription());
                         }
                     });
-                    Thread.sleep(300);
+                    Thread.sleep(sendingTimeInterval);
 
                 } catch (InterruptedException e) {
 
@@ -947,6 +946,19 @@ public final class MeshManager {
                 Log.i(LOG_TAG, "reset network tag");
                 break;
 
+            case MeshCommand.Const.TAG_SYNC_DATETIME:
+                Log.i(LOG_TAG, "sync datetime tag");
+                break;
+
+            case MeshCommand.Const.TAG_GET_DATETIME:
+                Log.i(LOG_TAG, "get datetime tag");
+                break;
+
+            case MeshCommand.Const.TAG_DATETIME_RESPONSE:
+                Log.i(LOG_TAG, "datetime response tag");
+                handleDatetimeResponseData(data);
+                break;
+
             default:
                 Log.e(LOG_TAG, "handleNotifyValue unknown tag " + tagValue);
         }
@@ -1019,6 +1031,36 @@ public final class MeshManager {
         }
     }
 
+    private void updateSendingTimeInterval(MeshNode node) {
+        sendingTimeInterval = (node.getDeviceType().getCategory() == MeshDeviceType.Category.rfPa) ? 500 : 300;
+    }
+
+    private void handleDatetimeResponseData(byte[] data) {
+
+        MeshCommand command = MeshCommand.makeWithNotifyData(data);
+        if (command == null) {
+            Log.e(LOG_TAG, "handleDatetimeResponseData failed, cannot convert to a MeshCommand");
+            return;
+        }
+
+        int year = command.getParam() | ((int) command.getUserData()[0] & 0xFF) << 8;
+        int month = (int) (command.getUserData()[1]) - 1;
+        int day = (int) (command.getUserData()[2]);
+        int hour = (int) (command.getUserData()[3]);
+        int minute = (int) (command.getUserData()[4]);
+        int second = (int) (command.getUserData()[5]);
+
+        Log.i(LOG_TAG, "handleDatetimeResponseData "
+                + year + ", " + month + ", " + day + ", " + hour + ", " + minute + ", " + second);
+        Calendar cal = Calendar.getInstance(Locale.getDefault());
+        cal.set(year, month, day, hour, minute, second);
+        Date date = cal.getTime();
+
+        if (deviceCallback != null) {
+            deviceCallback.didGetDate(this, command.getSrc(), date);
+        }
+    }
+
     private enum SetNetworkState {
         none, processing
     }
@@ -1026,5 +1068,4 @@ public final class MeshManager {
     private static class MeshManagerHolder {
         private static final MeshManager instance = new MeshManager();
     }
-
 }
