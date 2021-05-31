@@ -59,6 +59,7 @@ public class AndroidTelinkActivity extends AppCompatActivity {
             public void onItemClick(DefaultNetworkAdapter.ViewHolder holder, int position, MyDevice device) {
 
                 if (!device.isValid()) {
+                    MeshManager.getInstance().scanMeshDevices();
                     return;
                 }
 
