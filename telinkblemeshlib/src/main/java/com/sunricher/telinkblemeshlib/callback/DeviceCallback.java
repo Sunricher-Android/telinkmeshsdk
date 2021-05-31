@@ -17,4 +17,7 @@ public abstract class DeviceCallback {
     public void didGetDate(MeshManager manager, int address, Date date) {
     }
 
+    public void didGetLightOnOffDuration(MeshManager manager, int address, int duration) {
+    }
+
 }

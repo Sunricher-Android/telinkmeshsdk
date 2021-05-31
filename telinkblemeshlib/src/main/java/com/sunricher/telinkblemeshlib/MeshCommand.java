@@ -308,6 +308,34 @@ public class MeshCommand {
         return cmd;
     }
 
+    /**
+     *
+     * @param duration Range `[1, 0xFFFF]`, unit `seconds`.
+     */
+    public static MeshCommand setLightOnOffDuration(int address, int duration) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = Const.LIGHT_CONTROL_MODE_LIGHT_ON_OFF_DURATION;
+        cmd.userData[2] = 0x01; // set
+        cmd.userData[3] = (byte) (duration & 0xFF);
+        cmd.userData[4] = (byte) ((duration >> 8) & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand getLightOnOffDuration(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = Const.LIGHT_CONTROL_MODE_LIGHT_ON_OFF_DURATION;
+        cmd.userData[2] = 0x00; // get
+        return cmd;
+    }
+
     private int increaseSeqNo() {
 
         seqNo += 1;
@@ -419,6 +447,11 @@ public class MeshCommand {
         static final int SINGLE_CHANNEL_RGB = 0x04;
 
         static final int SINGLE_CHANNEL_COLOR_TEMPERATURE = 0x05;
+
+
+        static final int SR_IDENTIFIER_LIGHT_CONTROL_MODE = 0x01;
+
+        static final int LIGHT_CONTROL_MODE_LIGHT_ON_OFF_DURATION = 0x0F;
 
     }
 

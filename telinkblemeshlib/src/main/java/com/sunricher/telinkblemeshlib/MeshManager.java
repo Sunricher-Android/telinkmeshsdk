@@ -1008,6 +1008,12 @@ public final class MeshManager {
                 }
                 break;
 
+            case MeshCommand.Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE:
+
+                Log.i(LOG_TAG, "lightControlMode ");
+                handleLightControlModeCommand(command);
+                break;
+
             default:
                 Log.e(LOG_TAG, "unknown srIdentifier " + srIdentifier);
         }
@@ -1058,6 +1064,31 @@ public final class MeshManager {
 
         if (deviceCallback != null) {
             deviceCallback.didGetDate(this, command.getSrc(), date);
+        }
+    }
+
+    private void handleLightControlModeCommand(MeshCommand command) {
+
+        int mode = (int) command.getUserData()[1] & 0xFF;
+
+        switch (mode) {
+
+            case MeshCommand.Const.LIGHT_CONTROL_MODE_LIGHT_ON_OFF_DURATION:
+
+                if (command.getUserData()[2] != 0x00) {
+                    return;
+                }
+
+                int duration = (int) (command.getUserData()[3]) | ((int) (command.getUserData()[4]) << 8);
+                Log.i(LOG_TAG, "handleLightControlModeCommand duration " + duration);
+
+                if (deviceCallback != null) {
+                    deviceCallback.didGetLightOnOffDuration(this, command.getSrc(), duration);
+                }
+                break;
+
+            default:
+                break;
         }
     }
 

@@ -62,6 +62,8 @@ public class DeviceSettingsActivity extends AppCompatActivity {
 
         addressEditText = (EditText) findViewById(R.id.new_address_et);
 
+        getLightOnOffDuration();
+
         Button changeButton = (Button) findViewById(R.id.change_btn);
         changeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -163,6 +165,35 @@ public class DeviceSettingsActivity extends AppCompatActivity {
 
             }
         }, intentFilter);
+    }
+
+    private void setLightOnOffDuration() {
+
+        MeshCommand cmd = MeshCommand.setLightOnOffDuration(device.getMeshDevice().getAddress(), 2);
+        MeshManager.getInstance().send(cmd);
+    }
+
+    private void getLightOnOffDuration() {
+
+        MeshCommand cmd = MeshCommand.getLightOnOffDuration(device.getMeshDevice().getAddress());
+        MeshManager.getInstance().setDeviceCallback(new DeviceCallback() {
+            @Override
+            public void didUpdateMeshDevices(MeshManager manager, ArrayList<MeshDevice> meshDevices) {
+
+            }
+
+            @Override
+            public void didUpdateDeviceType(MeshManager manager, int deviceAddress, MeshDeviceType deviceType, byte[] macData) {
+
+            }
+
+            @Override
+            public void didGetLightOnOffDuration(MeshManager manager, int address, int duration) {
+
+                Toast.makeText(DeviceSettingsActivity.this, "duration " + duration, Toast.LENGTH_LONG).show();
+            }
+        });
+        MeshManager.getInstance().send(cmd);
     }
 
 }
