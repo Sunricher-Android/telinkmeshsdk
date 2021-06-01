@@ -59,8 +59,10 @@ public class MeshDevice {
     }
 
     public String getDescription() {
-        return "Address " + String.format("0x%02X", address)
-                + ", state " + state + ", brightness " + brightness;
+
+        String hexAddress = String.format("0x%02X", address);
+        return "Address " + address + " (" + hexAddress
+                + "), state " + state + ", brightness " + brightness;
     }
 
     public State getState() {

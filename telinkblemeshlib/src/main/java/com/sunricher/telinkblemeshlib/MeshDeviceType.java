@@ -88,7 +88,7 @@ public class MeshDeviceType {
                 capabilities.add(Capability.onOff);
                 break;
 
-                // DIM
+            // DIM
             case 0x11:
             case 0x13:
             case 0x31:
@@ -100,7 +100,7 @@ public class MeshDeviceType {
                 capabilities.add(Capability.brightness);
                 break;
 
-                // CCT
+            // CCT
             case 0x08:
             case 0x32:
             case 0x37:
@@ -111,7 +111,7 @@ public class MeshDeviceType {
                 capabilities.add(Capability.colorTemperature);
                 break;
 
-                // RGB
+            // RGB
             case 0x33:
             case 0x63:
                 capabilities.add(Capability.onOff);
@@ -119,7 +119,7 @@ public class MeshDeviceType {
                 capabilities.add(Capability.rgb);
                 break;
 
-                // RGBW
+            // RGBW
             case 0x34:
             case 0x64:
                 capabilities.add(Capability.onOff);
@@ -128,7 +128,7 @@ public class MeshDeviceType {
                 capabilities.add(Capability.white);
                 break;
 
-                // RGB CCT
+            // RGB CCT
             case 0x35:
             case 0x65:
                 capabilities.add(Capability.onOff);
@@ -218,6 +218,21 @@ public class MeshDeviceType {
         }
     }
 
+    @Override
+    public boolean equals(Object obj) {
+
+        if (obj == null) {
+            return false;
+        }
+        if (!obj.getClass().equals(this.getClass())) {
+            return false;
+        }
+
+        MeshDeviceType other = (MeshDeviceType) obj;
+
+        return this.rawValue1 == other.rawValue1 && this.rawValue2 == other.rawValue2;
+    }
+
     public enum Category {
         light,
         remote,
@@ -238,5 +253,4 @@ public class MeshDeviceType {
         white,
         rgb,
     }
-
 }

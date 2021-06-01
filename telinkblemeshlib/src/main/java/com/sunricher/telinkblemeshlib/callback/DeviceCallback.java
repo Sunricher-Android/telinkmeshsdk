@@ -20,4 +20,7 @@ public abstract class DeviceCallback {
     public void didGetLightOnOffDuration(MeshManager manager, int address, int duration) {
     }
 
+    public void didGetFirmwareVersion(MeshManager manager, int address, String version) {
+    }
+
 }

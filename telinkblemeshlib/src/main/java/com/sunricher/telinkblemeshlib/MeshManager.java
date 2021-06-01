@@ -67,6 +67,7 @@ public final class MeshManager {
     private BleReadCallback notifyReadCallback;
     private BleReadCallback commandReadCallback;
     private BleWriteCallback notifyWriteCallback;
+    private BleWriteCallback otaWriteCallback;
     private BleWriteCallback commandWriteCallback;
     private byte[] sessionKey;
     private Random random = new SecureRandom();
@@ -110,6 +111,7 @@ public final class MeshManager {
         notifyReadCallback = makeNotifyReadCallback();
         commandReadCallback = makeCommandReadCallback();
         notifyWriteCallback = makeNotifyWriteCallback();
+        otaWriteCallback = makeOtaWriteCallback();
         commandWriteCallback = makeCommandWriteCallback();
     }
 
@@ -231,6 +233,11 @@ public final class MeshManager {
         this.write(MeshNode.UUID.accessService, MeshNode.UUID.notifyCharacteristic, data, notifyWriteCallback);
     }
 
+    void sendOtaData(byte[] data, BleWriteCallback callback) {
+
+        this.write(MeshNode.UUID.accessService, MeshNode.UUID.otaCharacteristic, data, callback);
+    }
+
     public void sendSample(MeshCommand command) {
 
         sampleCommandCenter.append(command);
@@ -246,7 +253,7 @@ public final class MeshManager {
         this.send(command, sendingTimeInterval);
     }
 
-    public void send(MeshCommand command, long interval) {
+    void send(MeshCommand command, long interval) {
 
         this.commandExecutor.executeCommand(command, interval);
     }
@@ -880,6 +887,21 @@ public final class MeshManager {
         };
     }
 
+    private BleWriteCallback makeOtaWriteCallback() {
+
+        return new BleWriteCallback() {
+            @Override
+            public void onWriteSuccess(int current, int total, byte[] justWrite) {
+                Log.i(LOG_TAG, "otaWriteCallback onWriteSuccess");
+            }
+
+            @Override
+            public void onWriteFailure(BleException exception) {
+                Log.i(LOG_TAG, "otaWriteCallback onWriteFailure");
+            }
+        };
+    }
+
     private BleWriteCallback makeCommandWriteCallback() {
 
         return new BleWriteCallback() {
@@ -957,6 +979,11 @@ public final class MeshManager {
             case MeshCommand.Const.TAG_DATETIME_RESPONSE:
                 Log.i(LOG_TAG, "datetime response tag");
                 handleDatetimeResponseData(data);
+                break;
+
+            case MeshCommand.Const.TAG_FIRMWARE_RESPONSE:
+                Log.i(LOG_TAG, "firmware response tag");
+                handleFirmwareResponseData(data);
                 break;
 
             default:
@@ -1065,6 +1092,38 @@ public final class MeshManager {
         if (deviceCallback != null) {
             deviceCallback.didGetDate(this, command.getSrc(), date);
         }
+    }
+
+    private void handleFirmwareResponseData(byte[] data) {
+
+        MeshCommand command = MeshCommand.makeWithNotifyData(data);
+        if (command == null) {
+            Log.e(LOG_TAG, "handleFirmwareResponseData failed, cannot convert to a MeshCommand");
+            return;
+        }
+
+        byte[] versionBytes = new byte[4];
+        versionBytes[0] = command.getUserData()[0];
+        versionBytes[1] = command.getUserData()[1];
+        versionBytes[2] = command.getUserData()[2];
+        versionBytes[3] = command.getUserData()[3];
+
+        try {
+
+            String version = new String(versionBytes, "utf-8");
+            boolean isStandard = version.contains("V");
+            Log.i(LOG_TAG, "handleFirmwareResponseData version " + version + ", src " + command.getSrc());
+
+            final String currentVersion = isStandard ? version : "V0.1";
+
+            if (deviceCallback != null) {
+                deviceCallback.didGetFirmwareVersion(this, command.getSrc(), currentVersion);
+            }
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void handleLightControlModeCommand(MeshCommand command) {

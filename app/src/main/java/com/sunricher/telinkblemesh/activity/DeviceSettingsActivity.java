@@ -128,6 +128,8 @@ public class DeviceSettingsActivity extends AppCompatActivity {
                 MeshManager.getInstance().send(cmd);
             }
         });
+
+        setUpOtaButton();
     }
 
     private int getNewAddress() {
@@ -194,6 +196,19 @@ public class DeviceSettingsActivity extends AppCompatActivity {
             }
         });
         MeshManager.getInstance().send(cmd);
+    }
+
+    private void setUpOtaButton() {
+
+        Button otaButton = findViewById(R.id.ota_btn);
+        otaButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent intent = new Intent(DeviceSettingsActivity.this, OtaActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
 }

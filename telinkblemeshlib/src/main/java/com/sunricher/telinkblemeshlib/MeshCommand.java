@@ -336,6 +336,14 @@ public class MeshCommand {
         return cmd;
     }
 
+    public static MeshCommand getFirmwareVersion(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_GET_FIRMWARE;
+        cmd.dst = address;
+        return cmd;
+    }
+
     private int increaseSeqNo() {
 
         seqNo += 1;
@@ -433,6 +441,10 @@ public class MeshCommand {
         static final int TAG_GET_DATETIME = 0xE8;
 
         static final int TAG_DATETIME_RESPONSE = 0xE9;
+
+        static final int TAG_GET_FIRMWARE = 0xC7;
+
+        static final int TAG_FIRMWARE_RESPONSE = 0xC8;
 
 
         static final int SR_IDENTIFIER_MAC = 0x76;

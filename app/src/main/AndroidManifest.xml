@@ -9,6 +9,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TelinkBleMesh">
+        <activity android:name=".activity.OtaActivity"></activity>
         <activity
             android:name=".activity.AddDeviceActivity"
             android:label="Add device" />
