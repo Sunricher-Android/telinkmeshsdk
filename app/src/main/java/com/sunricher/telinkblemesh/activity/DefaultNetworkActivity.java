@@ -94,32 +94,6 @@ public class DefaultNetworkActivity extends AppCompatActivity {
                 intent.putExtra("address", address);
                 LocalBroadcastManager.getInstance(DefaultNetworkActivity.this).sendBroadcast(intent);
             }
-
-            @Override
-            public void didConfirmNewNetwork(MeshManager manager, Boolean isSuccess) {
-
-            }
-
-
-            @Override
-            public void didDiscoverNode(MeshManager manager, MeshNode node) {
-
-            }
-
-            @Override
-            public void didConnectNode(MeshManager manager, MeshNode node) {
-
-            }
-
-            @Override
-            public void didDisconnectNode(MeshManager manager, Boolean isActiveDisConnected, MeshNode node, BluetoothGatt gatt) {
-
-            }
-
-            @Override
-            public void didFailToConnectNode(MeshManager manager, MeshNode node) {
-
-            }
         });
 
         MeshManager.getInstance().setDeviceCallback(new DeviceCallback() {

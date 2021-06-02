@@ -59,12 +59,12 @@ public class MeshOtaFile {
             }
         }
 
-        String deviceTypeString = String.format("%02X%02X", rawValue1, rawValue2);
+        String otaFilePrefix = String.format("ota_%02X%02X", rawValue1, rawValue2);
 
         Field[] fields = R.raw.class.getFields();
         for (Field field : fields) {
 
-            if (field.getName().contains(deviceTypeString)) {
+            if (field.getName().contains(otaFilePrefix)) {
 
                 return MeshOtaFile.makeWithField(field);
             }

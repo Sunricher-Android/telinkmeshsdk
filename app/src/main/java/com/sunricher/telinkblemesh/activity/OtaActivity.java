@@ -61,16 +61,6 @@ public class OtaActivity extends AppCompatActivity {
         return new DeviceCallback() {
 
             @Override
-            public void didUpdateMeshDevices(MeshManager manager, ArrayList<MeshDevice> meshDevices) {
-
-            }
-
-            @Override
-            public void didUpdateDeviceType(MeshManager manager, int deviceAddress, MeshDeviceType deviceType, byte[] macData) {
-
-            }
-
-            @Override
             public void didGetFirmwareVersion(MeshManager manager, int address, String version) {
 
                 if (address != device.getMeshDevice().getAddress()) {
@@ -137,13 +127,10 @@ public class OtaActivity extends AppCompatActivity {
     private void setUpStopButton() {
 
         Button stopButton = findViewById(R.id.stop_btn);
-        stopButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        stopButton.setOnClickListener(view -> {
 
-                stateTextView.setText("Stopped");
-                MeshOtaManager.getInstance().stopOta();
-            }
+            stateTextView.setText("Stopped");
+            MeshOtaManager.getInstance().stopOta();
         });
     }
 }

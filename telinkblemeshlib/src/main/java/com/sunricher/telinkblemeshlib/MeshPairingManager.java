@@ -340,21 +340,6 @@ public class MeshPairingManager {
             }
 
             @Override
-            public void didConnectNode(MeshManager manager, MeshNode node) {
-
-            }
-
-            @Override
-            public void didDisconnectNode(MeshManager manager, Boolean isActiveDisConnected, MeshNode node, BluetoothGatt gatt) {
-
-            }
-
-            @Override
-            public void didFailToConnectNode(MeshManager manager, MeshNode node) {
-
-            }
-
-            @Override
             public void didLoginNode(MeshManager manager, MeshNode node) {
 
                 switch (status) {
@@ -422,19 +407,9 @@ public class MeshPairingManager {
             }
 
             @Override
-            public void didFailToLoginNode(MeshManager manager) {
-
-            }
-
-            @Override
             public void didGetMac(MeshManager manager, byte[] macBytes, int address) {
 
                 handleDidGetMac(address, macBytes);
-            }
-
-            @Override
-            public void didConfirmNewNetwork(MeshManager manager, Boolean isSuccess) {
-
             }
         };
     }
@@ -510,12 +485,6 @@ public class MeshPairingManager {
                     default:
                         break;
                 }
-            }
-
-            @Override
-            public void didUpdateDeviceType(MeshManager manager, int deviceAddress, MeshDeviceType deviceType, byte[] macData) {
-
-//                handleDidGetMac(deviceAddress, macData);
             }
         };
     }
@@ -601,13 +570,13 @@ public class MeshPairingManager {
 
     public abstract static class Callback {
 
-        public abstract void pairingFailed(MeshPairingManager manager, FailedReason reason);
+        public void pairingFailed(MeshPairingManager manager, FailedReason reason) {}
 
-        public abstract void didAddNewDevices(MeshPairingManager manager, ArrayList<MeshDevice> meshDevices);
+        public void didAddNewDevices(MeshPairingManager manager, ArrayList<MeshDevice> meshDevices) {}
 
-        public abstract void didUpdateProgress(MeshPairingManager manager, double progress);
+        public void didUpdateProgress(MeshPairingManager manager, double progress) {}
 
-        public abstract void didFinishPairing(MeshPairingManager manager);
+        public void didFinishPairing(MeshPairingManager manager) {}
 
     }
 

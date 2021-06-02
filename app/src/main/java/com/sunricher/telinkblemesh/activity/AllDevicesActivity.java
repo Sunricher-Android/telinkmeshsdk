@@ -54,41 +54,6 @@ public class AllDevicesActivity extends AppCompatActivity {
                 nodes.add(node);
                 adapter.addNode(node);
             }
-
-            @Override
-            public void didConnectNode(MeshManager manager, MeshNode node) {
-
-            }
-
-            @Override
-            public void didDisconnectNode(MeshManager manager, Boolean isActiveDisConnected, MeshNode node, BluetoothGatt gatt) {
-
-            }
-
-            @Override
-            public void didFailToConnectNode(MeshManager manager, MeshNode node) {
-
-            }
-
-            @Override
-            public void didLoginNode(MeshManager manager, MeshNode node) {
-
-            }
-
-            @Override
-            public void didFailToLoginNode(MeshManager manager) {
-
-            }
-
-            @Override
-            public void didGetMac(MeshManager manager, byte[] macBytes, int address) {
-
-            }
-
-            @Override
-            public void didConfirmNewNetwork(MeshManager manager, Boolean isSuccess) {
-
-            }
         });
         MeshManager.getInstance().scanNode(MeshNetwork.factory, false, true);
 

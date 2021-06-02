@@ -196,21 +196,6 @@ public class MeshOtaManager {
             }
 
             @Override
-            public void didConnectNode(MeshManager manager, MeshNode node) {
-
-            }
-
-            @Override
-            public void didDisconnectNode(MeshManager manager, Boolean isActiveDisConnected, MeshNode node, BluetoothGatt gatt) {
-
-            }
-
-            @Override
-            public void didFailToConnectNode(MeshManager manager, MeshNode node) {
-
-            }
-
-            @Override
             public void didLoginNode(MeshManager manager, MeshNode node) {
 
                 if (state != State.connecting) {
@@ -219,21 +204,6 @@ public class MeshOtaManager {
 
                 cancelTimer();
                 startSendData();
-            }
-
-            @Override
-            public void didFailToLoginNode(MeshManager manager) {
-
-            }
-
-            @Override
-            public void didGetMac(MeshManager manager, byte[] macBytes, int address) {
-
-            }
-
-            @Override
-            public void didConfirmNewNetwork(MeshManager manager, Boolean isSuccess) {
-
             }
         };
     }

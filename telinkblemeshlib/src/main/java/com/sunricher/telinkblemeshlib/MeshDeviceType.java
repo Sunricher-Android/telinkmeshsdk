@@ -49,6 +49,10 @@ public class MeshDeviceType {
 
             case 0x07:
                 this.category = Category.curtain;
+                ArraySet<Capability> capabilities = new ArraySet<>();
+                capabilities.add(Capability.onOff);
+                capabilities.add(Capability.brightness);
+                this.capabilities = capabilities;
                 break;
 
             case 0x08:
@@ -96,6 +100,7 @@ public class MeshDeviceType {
             case 0x61:
             case 0x36:
             case 0x66:
+            case 0x3C:
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
                 break;

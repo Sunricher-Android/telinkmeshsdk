@@ -32,7 +32,8 @@ public class MyDevice {
             mac.append(String.format("%02X", value));
         }
 
-        return mac + ", " + deviceType.getCategoryTitle();
+        String deviceTypeString = String.format("0x%02X%02X", deviceType.getRawValue1(), deviceType.getRawValue2());
+        return mac + ", " + deviceType.getCategoryTitle() + ", " + deviceTypeString;
     }
 
     public Boolean isValid() {

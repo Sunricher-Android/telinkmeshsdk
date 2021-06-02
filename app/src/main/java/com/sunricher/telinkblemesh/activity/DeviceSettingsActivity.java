@@ -105,15 +105,6 @@ public class DeviceSettingsActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 MeshManager.getInstance().setDeviceCallback(new DeviceCallback() {
-                    @Override
-                    public void didUpdateMeshDevices(MeshManager manager, ArrayList<MeshDevice> meshDevices) {
-
-                    }
-
-                    @Override
-                    public void didUpdateDeviceType(MeshManager manager, int deviceAddress, MeshDeviceType deviceType, byte[] macData) {
-
-                    }
 
                     @Override
                     public void didGetDate(MeshManager manager, int address, Date date) {
@@ -179,15 +170,6 @@ public class DeviceSettingsActivity extends AppCompatActivity {
 
         MeshCommand cmd = MeshCommand.getLightOnOffDuration(device.getMeshDevice().getAddress());
         MeshManager.getInstance().setDeviceCallback(new DeviceCallback() {
-            @Override
-            public void didUpdateMeshDevices(MeshManager manager, ArrayList<MeshDevice> meshDevices) {
-
-            }
-
-            @Override
-            public void didUpdateDeviceType(MeshManager manager, int deviceAddress, MeshDeviceType deviceType, byte[] macData) {
-
-            }
 
             @Override
             public void didGetLightOnOffDuration(MeshManager manager, int address, int duration) {
