@@ -49,6 +49,7 @@ public class AndroidTelinkActivity extends AppCompatActivity {
 
         setupAddButton();
         setupAddressButton();
+        setupSingleAddButton();
 
         setConnecting(true);
 
@@ -154,6 +155,20 @@ public class AndroidTelinkActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(AndroidTelinkActivity.this, MeshAddressActivity.class);
                 MeshAddressActivity.network = network;
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void setupSingleAddButton() {
+
+        Button singleAddButton = findViewById(R.id.single_add_btn);
+        singleAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent intent = new Intent(AndroidTelinkActivity.this, SinglePairingActivity.class);
+                SinglePairingActivity.network = network;
                 startActivity(intent);
             }
         });

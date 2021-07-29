@@ -258,7 +258,7 @@ public final class MeshManager {
         this.commandExecutor.executeCommand(command, interval);
     }
 
-    void setNewNetwork(MeshNetwork newNetwork) {
+    void setNewNetwork(MeshNetwork newNetwork, boolean isMesh) {
 
         setNetworkState = SetNetworkState.processing;
         Log.i(LOG_TAG, "setNetNetwork " + newNetwork.getName() + ", " + newNetwork.getPassword());
@@ -295,7 +295,9 @@ public final class MeshManager {
 
         byte[] ltkData = new byte[20];
         ltkData[0] = Opcode.BLE_GATT_OP_PAIR_LTK.getValue();
-//        ltkData[17] = 0x01;
+        if (isMesh) {
+            ltkData[17] = 0x01;
+        }
         System.arraycopy(ltk, 0, ltkData, 1, ltk.length);
 
         UUID serviceUUID = MeshNode.UUID.accessService;
@@ -760,7 +762,8 @@ public final class MeshManager {
 
                 if (MeshManager.this.isAutoLogin
                         && MeshManager.this.network.getName().equals(node.getName())
-                        && MeshManager.this.connectNode == null) {
+                        && MeshManager.this.connectNode == null
+                        && node.getDeviceType().isSafeConnection()) {
                     MeshManager.this.connect(node);
                 }
             }

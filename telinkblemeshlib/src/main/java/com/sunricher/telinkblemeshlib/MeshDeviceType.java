@@ -1,5 +1,6 @@
 package com.sunricher.telinkblemeshlib;
 
+import android.graphics.LightingColorFilter;
 import android.util.ArraySet;
 
 public class MeshDeviceType {
@@ -33,6 +34,10 @@ public class MeshDeviceType {
             case 0x13:
             case 0x14:
                 this.category = Category.remote;
+                break;
+
+            case 0x16:
+                this.category = Category.customPanel;
                 break;
 
             case 0x04:
@@ -194,6 +199,9 @@ public class MeshDeviceType {
             case rfPa:
                 return "RF PA";
 
+            case customPanel:
+                return "Custom Panel";
+
             default:
                 return "Unsupported";
         }
@@ -248,6 +256,7 @@ public class MeshDeviceType {
         outlet,
         bridge,
         rfPa,
+        customPanel,
         unsupported,
     }
 
@@ -257,5 +266,49 @@ public class MeshDeviceType {
         colorTemperature,
         white,
         rgb,
+    }
+
+    public boolean isSupportMeshAdd() {
+
+        switch (this.category) {
+
+            case light:
+            case curtain:
+            case bridge:
+            case outlet:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    public boolean isSupportSingleAdd() {
+
+        switch (this.category) {
+
+            case remote:
+            case sensor:
+            case rfPa:
+            case customPanel:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    public boolean isSafeConnection() {
+
+        switch (this.category) {
+
+            case light:
+            case curtain:
+            case outlet:
+                return true;
+
+            default:
+                return false;
+        }
     }
 }

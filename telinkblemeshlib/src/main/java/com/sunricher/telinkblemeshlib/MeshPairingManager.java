@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import androidx.core.provider.SelfDestructiveThread;
+
 public class MeshPairingManager {
 
     private static final String LOG_TAG = "MeshPairingManager";
@@ -142,7 +144,7 @@ public class MeshPairingManager {
 
         cancelTimer();
         status = Status.allMacScanning;
-        MeshCommand cmd = MeshCommand.requestAddressMac(MeshCommand.Address.all);
+        MeshCommand cmd = MeshCommand.requestMacDeviceType(MeshCommand.Address.all);
         MeshManager.getInstance().send(cmd);
 
         timer = new Timer();
@@ -219,7 +221,7 @@ public class MeshPairingManager {
 
         cancelTimer();
         status = Status.networkSetting;
-        MeshManager.getInstance().setNewNetwork(network);
+        MeshManager.getInstance().setNewNetwork(network, true);
 
         timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -409,8 +411,9 @@ public class MeshPairingManager {
             @Override
             public void didGetMac(MeshManager manager, byte[] macBytes, int address) {
 
-                handleDidGetMac(address, macBytes);
+//                handleDidGetMac(address, macBytes);
             }
+
         };
     }
 
@@ -485,6 +488,28 @@ public class MeshPairingManager {
                     default:
                         break;
                 }
+            }
+
+            @Override
+            public void didUpdateDeviceType(MeshManager manager, int address, MeshDeviceType deviceType, byte[] macData) {
+
+                if (!deviceType.isSupportMeshAdd()) {
+
+                    stop();
+                    if (callback != null) {
+
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                callback.terminalWithUnsupportedDevice(MeshPairingManager.this, address, deviceType, macData);
+                            }
+                        });
+                    }
+                    return;
+                }
+
+                handleDidGetMac(address, macData);
             }
         };
     }
@@ -577,6 +602,8 @@ public class MeshPairingManager {
         public void didUpdateProgress(MeshPairingManager manager, double progress) {}
 
         public void didFinishPairing(MeshPairingManager manager) {}
+
+        public void terminalWithUnsupportedDevice(MeshPairingManager manager, int address, MeshDeviceType deviceType, byte[] bytes) {}
 
     }
 

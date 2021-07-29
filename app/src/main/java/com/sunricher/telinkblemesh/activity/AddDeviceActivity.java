@@ -7,6 +7,7 @@ import android.widget.TextView;
 
 import com.sunricher.telinkblemesh.R;
 import com.sunricher.telinkblemeshlib.MeshDevice;
+import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
 import com.sunricher.telinkblemeshlib.MeshNetwork;
 import com.sunricher.telinkblemeshlib.MeshPairingManager;
@@ -68,6 +69,11 @@ public class AddDeviceActivity extends AppCompatActivity {
                     @Override
                     public void didFinishPairing(MeshPairingManager manager) {
                         statusLabel.setText("finish pairing, add devices " + newDeviceSet.size());
+                    }
+
+                    @Override
+                    public void terminalWithUnsupportedDevice(MeshPairingManager manager, int address, MeshDeviceType deviceType, byte[] bytes) {
+                        statusLabel.setText("terminalWithUnsupportedDevice " + address);
                     }
                 });
             }
