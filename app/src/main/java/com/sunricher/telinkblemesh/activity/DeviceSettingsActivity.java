@@ -75,6 +75,7 @@ public class DeviceSettingsActivity extends AppCompatActivity {
                 handler.postDelayed(changeRunnable, 4000);
 
                 MeshCommand cmd = MeshCommand.changeAddress(device.getMeshDevice().getAddress(), newAddress, device.getMacData());
+//                MeshCommand cmd = MeshCommand.changeAddress(device.getMeshDevice().getAddress(), newAddress);
                 MeshManager.getInstance().send(cmd);
             }
         });

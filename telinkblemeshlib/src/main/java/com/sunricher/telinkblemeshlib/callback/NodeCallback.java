@@ -32,4 +32,7 @@ public abstract class NodeCallback {
     public void didConfirmNewNetwork(MeshManager manager, Boolean isSuccess) {
     }
 
+    public void didGetFirmware(MeshManager manager, String firmware) {
+    }
+
 }

@@ -119,6 +119,17 @@ public class MeshCommand {
         return cmd;
     }
 
+    public static MeshCommand changeAddress(int address, int newAddress) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_REPLACE_ADDRESS;
+        cmd.src = 0;
+        cmd.dst = address;
+        cmd.param = newAddress & 0xFF;
+        cmd.userData[0] = 0x00;
+        return cmd;
+    }
+
     /**
      * Reset to factory network
      *

@@ -28,6 +28,7 @@ import com.sunricher.telinkblemeshlib.telink.Opcode;
 import com.sunricher.telinkblemeshlib.telink.TelinkLog;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -81,6 +82,8 @@ public final class MeshManager {
             (byte) 0xC5, (byte) 0xC6, (byte) 0xC7, (byte) 0xD8, (byte) 0xD9,
             (byte) 0xDA, (byte) 0xDB, (byte) 0xDC, (byte) 0xDD, (byte) 0xDE,
             (byte) 0xDF};
+
+    private int networkSettingTag = 0;
 
     private MeshManager() {
         Log.i(LOG_TAG, "created");
@@ -228,6 +231,24 @@ public final class MeshManager {
         this.commandExecutor.executeNotify(data);
     }
 
+    public void readFirmwareWithConnectNode() {
+        if (!this.isLogin) {
+            return;
+        }
+        this.read(MeshNode.UUID.deviceInformationService, MeshNode.UUID.firmwareCharacteristic, new BleReadCallback() {
+            @Override
+            public void onReadSuccess(byte[] data) {
+
+                handleReadFirmwareData(data);
+            }
+
+            @Override
+            public void onReadFailure(BleException exception) {
+
+            }
+        });
+    }
+
     void sendNotifyData(byte[] data) {
 
         this.write(MeshNode.UUID.accessService, MeshNode.UUID.notifyCharacteristic, data, notifyWriteCallback);
@@ -307,10 +328,80 @@ public final class MeshManager {
             @Override
             public void run() {
 
+                networkSettingTag = 0;
+
                 BleWriteCallback writeCallback = new BleWriteCallback() {
                     @Override
                     public void onWriteSuccess(int current, int total, byte[] justWrite) {
 
+                        int tag = networkSettingTag;
+                        switch (tag) {
+                            case 0:
+                                break;
+
+                            case 1:
+                                networkSettingTag = 2;
+                                Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(pwdData));
+                                MeshManager.this.write(serviceUUID, pairUUID, pwdData, this);
+                                break;
+
+                            case 2:
+                                networkSettingTag = 3;
+                                Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(ltkData));
+                                MeshManager.this.write(serviceUUID, pairUUID, ltkData, this);
+                                break;
+
+                            case 3:
+                                networkSettingTag = 4;
+                                MeshManager.this.read(serviceUUID, pairUUID, new BleReadCallback() {
+                                    @Override
+                                    public void onReadSuccess(byte[] data) {
+
+                                        MeshManager.this.setNetworkState = SetNetworkState.none;
+                                        Log.i(LOG_TAG, "setNetwork onReadSuccess pairUUID " + HexUtil.encodeHexStr(data));
+
+                                        if (data.length > 0 && data[0] == 0x07) {
+
+                                            Log.i(LOG_TAG, "setNetworkState success");
+                                            MeshManager.this.read(MeshNode.UUID.deviceInformationService, MeshNode.UUID.firmwareCharacteristic, new BleReadCallback() {
+                                                @Override
+                                                public void onReadSuccess(byte[] data) {
+
+                                                    Log.i(LOG_TAG, "setNetwork onReadSuccess firmwareCharacteristic " + HexUtil.encodeHexStr(data));
+                                                    handleReadFirmwareData(data);
+                                                }
+
+                                                @Override
+                                                public void onReadFailure(BleException exception) {
+
+                                                    Log.i(LOG_TAG, "setNetwork onReadFailure " + exception.getDescription());
+                                                }
+                                            });
+
+                                        }
+
+                                        if (MeshManager.this.nodeCallback == null) return;
+                                        if (data.length > 0) {
+
+                                            boolean isSuccess = data[0] == 0x07;
+                                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                                @Override
+                                                public void run() {
+
+                                                    MeshManager.this.nodeCallback.didConfirmNewNetwork(MeshManager.this, isSuccess);
+                                                }
+                                            });
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onReadFailure(BleException exception) {
+
+                                        Log.i(LOG_TAG, "setNetwork onReadFailure " + exception.getDescription());
+                                    }
+                                });
+                                break;
+                        }
                         Log.i(LOG_TAG, "setNetwork onWriteSuccess");
                     }
 
@@ -320,73 +411,10 @@ public final class MeshManager {
                         Log.i(LOG_TAG, "setNetwork onWriteFailure " + exception.getDescription());
                     }
                 };
-                try {
 
-                    Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(nnData));
-                    Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(pwdData));
-                    Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(ltkData));
-
-                    MeshManager.this.write(serviceUUID, pairUUID, nnData, writeCallback);
-                    Thread.sleep(sendingTimeInterval);
-
-                    MeshManager.this.write(serviceUUID, pairUUID, pwdData, writeCallback);
-                    Thread.sleep(sendingTimeInterval);
-
-                    MeshManager.this.write(serviceUUID, pairUUID, ltkData, writeCallback);
-                    Thread.sleep(sendingTimeInterval);
-
-                    MeshManager.this.read(serviceUUID, pairUUID, new BleReadCallback() {
-                        @Override
-                        public void onReadSuccess(byte[] data) {
-
-                            MeshManager.this.setNetworkState = SetNetworkState.none;
-                            Log.i(LOG_TAG, "setNetwork onReadSuccess pairUUID " + HexUtil.encodeHexStr(data));
-
-                            if (data.length > 0 && data[0] == 0x07) {
-
-                                Log.i(LOG_TAG, "setNetworkState success");
-                                MeshManager.this.read(MeshNode.UUID.deviceInformationService, MeshNode.UUID.firmwareCharacteristic, new BleReadCallback() {
-                                    @Override
-                                    public void onReadSuccess(byte[] data) {
-
-                                        Log.i(LOG_TAG, "setNetwork onReadSuccess firmwareCharacteristic " + HexUtil.encodeHexStr(data));
-                                    }
-
-                                    @Override
-                                    public void onReadFailure(BleException exception) {
-
-                                        Log.i(LOG_TAG, "setNetwork onReadFailure " + exception.getDescription());
-                                    }
-                                });
-
-                            }
-
-                            if (MeshManager.this.nodeCallback == null) return;
-                            if (data.length > 0) {
-
-                                boolean isSuccess = data[0] == 0x07;
-                                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                    @Override
-                                    public void run() {
-
-                                        MeshManager.this.nodeCallback.didConfirmNewNetwork(MeshManager.this, isSuccess);
-                                    }
-                                });
-                            }
-                        }
-
-                        @Override
-                        public void onReadFailure(BleException exception) {
-
-                            Log.i(LOG_TAG, "setNetwork onReadFailure " + exception.getDescription());
-                        }
-                    });
-                    Thread.sleep(sendingTimeInterval);
-
-                } catch (InterruptedException e) {
-
-                    e.printStackTrace();
-                }
+                networkSettingTag = 1;
+                Log.i(LOG_TAG, "will send " + HexUtil.encodeHexStr(nnData));
+                MeshManager.this.write(serviceUUID, pairUUID, nnData, writeCallback);
             }
         }).start();
 
@@ -1064,6 +1092,22 @@ public final class MeshManager {
 
         if (nodeCallback != null) {
             nodeCallback.didGetMac(this, macData, newAddress);
+        }
+    }
+
+    private void handleReadFirmwareData(byte[] data) {
+
+        String firmware = new String(data, StandardCharsets.UTF_8);
+        String firmwareTrim = firmware.replace("\0", "");
+        Log.i(LOG_TAG, "readFirmwareWithConnectNode onReadSuccess " + firmwareTrim);
+        if (MeshManager.this.nodeCallback != null) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+
+                    MeshManager.this.nodeCallback.didGetFirmware(MeshManager.this, firmwareTrim);
+                }
+            });
         }
     }
 

@@ -1,23 +1,24 @@
 package com.sunricher.telinkblemesh.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.widget.Adapter;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.sunricher.telinkblemesh.R;
 import com.sunricher.telinkblemesh.adapter.AllDevicesAdapter;
+import com.sunricher.telinkblemeshlib.AutoPairingManager;
 import com.sunricher.telinkblemeshlib.MeshNetwork;
 import com.sunricher.telinkblemeshlib.MeshNode;
-import com.sunricher.telinkblemeshlib.SinglePairingManager;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class SinglePairingActivity extends AppCompatActivity {
 
@@ -40,16 +41,16 @@ public class SinglePairingActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         AllDevicesAdapter adapter = new AllDevicesAdapter();
-        adapter.setClickListener(new AllDevicesAdapter.OnClickListener() {
-            @Override
-            public void onItemClick(AllDevicesAdapter.ViewHolder holder, int position) {
-
-                MeshNode node = nodes.get(position);
-                if (node == null) return;
-                statusLabel.setText("pairing...");
-                SinglePairingManager.getInstance().startPairing(network, getApplication(), node);
-            }
-        });
+//        adapter.setClickListener(new AllDevicesAdapter.OnClickListener() {
+//            @Override
+//            public void onItemClick(AllDevicesAdapter.ViewHolder holder, int position) {
+//
+//                MeshNode node = nodes.get(position);
+//                if (node == null) return;
+//                statusLabel.setText("pairing...");
+//                SinglePairingManager.getInstance().startPairing(network, getApplication(), node);
+//            }
+//        });
         recyclerView.setAdapter(adapter);
 
         startButton.setOnClickListener(new View.OnClickListener() {
@@ -58,13 +59,20 @@ public class SinglePairingActivity extends AppCompatActivity {
 
                 nodes.clear();
                 adapter.clear();
-                SinglePairingManager.getInstance().startScanning();
+                AutoPairingManager.getInstance().startPairing(network, getApplication());
             }
         });
 
-        SinglePairingManager.getInstance().setCallback(new SinglePairingManager.Callback() {
+        AutoPairingManager.getInstance().setCallback(new AutoPairingManager.Callback() {
             @Override
-            public void didDiscoverNode(SinglePairingManager manager, MeshNode node) {
+            public void terminalWithNoMoreNewAddresses(AutoPairingManager manager) {
+                Toast.makeText(SinglePairingActivity.this, "No more addresses", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void didAddNode(AutoPairingManager manager, MeshNode node, int newAddress) {
+
+                Log.i("AutoPairing","did add node");
 
                 if (nodes.contains(node)) {
                     return;
@@ -73,27 +81,13 @@ public class SinglePairingActivity extends AppCompatActivity {
                 nodes.add(node);
                 adapter.addNode(node);
             }
-
-            @Override
-            public void terminalWithUnsupportedNode(SinglePairingManager manager, MeshNode node) {
-                statusLabel.setText("terminalWithUnsupportedNode");
-            }
-
-            @Override
-            public void terminalWithNodeNoMoreNewAddresses(SinglePairingManager manager) {
-                statusLabel.setText("terminalWithNodeNoMoreNewAddresses");
-            }
-
-            @Override
-            public void didFailToLoginNode(SinglePairingManager manager) {
-                statusLabel.setText("didFailToLoginNode");
-            }
-
-            @Override
-            public void didFinishPairing(SinglePairingManager manager) {
-                statusLabel.setText("didFinishPairing");
-            }
         });
+    }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        AutoPairingManager.getInstance().stop();
     }
 }

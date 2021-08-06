@@ -287,6 +287,7 @@ public class MeshDeviceType {
 
         switch (this.category) {
 
+            case light:
             case remote:
             case sensor:
             case rfPa:
