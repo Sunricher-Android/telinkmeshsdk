@@ -283,22 +283,6 @@ public class MeshDeviceType {
         }
     }
 
-    public boolean isSupportSingleAdd() {
-
-        switch (this.category) {
-
-            case light:
-            case remote:
-            case sensor:
-            case rfPa:
-            case customPanel:
-                return true;
-
-            default:
-                return false;
-        }
-    }
-
     public boolean isSafeConnection() {
 
         switch (this.category) {

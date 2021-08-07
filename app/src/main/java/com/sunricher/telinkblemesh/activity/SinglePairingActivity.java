@@ -41,16 +41,6 @@ public class SinglePairingActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         AllDevicesAdapter adapter = new AllDevicesAdapter();
-//        adapter.setClickListener(new AllDevicesAdapter.OnClickListener() {
-//            @Override
-//            public void onItemClick(AllDevicesAdapter.ViewHolder holder, int position) {
-//
-//                MeshNode node = nodes.get(position);
-//                if (node == null) return;
-//                statusLabel.setText("pairing...");
-//                SinglePairingManager.getInstance().startPairing(network, getApplication(), node);
-//            }
-//        });
         recyclerView.setAdapter(adapter);
 
         startButton.setOnClickListener(new View.OnClickListener() {

@@ -1,6 +1,5 @@
 package com.sunricher.telinkblemesh.activity;
 
-import android.bluetooth.BluetoothGatt;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,12 +16,10 @@ import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
 import com.sunricher.telinkblemeshlib.MeshNetwork;
 import com.sunricher.telinkblemeshlib.MeshNode;
-import com.sunricher.telinkblemeshlib.MeshPairingManager;
 import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
 import com.sunricher.telinkblemeshlib.callback.NodeCallback;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -133,14 +130,8 @@ public class AndroidTelinkActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                Intent intent = new Intent(AndroidTelinkActivity.this, AddDeviceActivity.class);
-                AddDeviceActivity.network = network;
-                List<Integer> addressList = new ArrayList<>();
-                List<MyDevice> deviceList = adapter.getDevices();
-                for (MyDevice device : deviceList) {
-                    addressList.add(device.getMeshDevice().getAddress());
-                }
-                AddDeviceActivity.existList = addressList;
+                Intent intent = new Intent(AndroidTelinkActivity.this, BridgePairingActivity.class);
+                BridgePairingActivity.network = network;
                 AndroidTelinkActivity.this.startActivity(intent);
             }
         });

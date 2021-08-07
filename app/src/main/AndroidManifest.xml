@@ -9,11 +9,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TelinkBleMesh">
-        <activity android:name=".activity.SinglePairingActivity"></activity>
+        <activity android:name=".activity.BridgePairingActivity"></activity>
+        <activity android:name=".activity.SinglePairingActivity" />
         <activity android:name=".activity.OtaActivity" />
-        <activity
-            android:name=".activity.AddDeviceActivity"
-            android:label="Add device" />
         <activity
             android:name=".activity.MeshAddressActivity"
             android:label="Mesh address" />

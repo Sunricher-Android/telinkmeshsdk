@@ -39,6 +39,9 @@ public class AutoPairingManager {
         this.callback = callback;
     }
 
+    /**
+     * Start pairing without bridge.
+     */
     public void startPairing(MeshNetwork network, Application context) {
 
         Log.i(LOG_TAG, "startPairing " + network.getName() + ", " + network.getPassword());
@@ -183,6 +186,7 @@ public class AutoPairingManager {
 
         state = State.stopped;
         cancelTimer();
+        MeshManager.getInstance().setNodeCallback(null);
         MeshManager.getInstance().stopScanNode();
         MeshManager.getInstance().disconnect();
     }
