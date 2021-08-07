@@ -12,9 +12,11 @@ import com.sunricher.telinkblemeshlib.MeshDevice;
 import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
 import com.sunricher.telinkblemeshlib.MeshNetwork;
+import com.sunricher.telinkblemeshlib.MeshNode;
 import com.sunricher.telinkblemeshlib.MeshOtaFile;
 import com.sunricher.telinkblemeshlib.MeshOtaManager;
 import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
+import com.sunricher.telinkblemeshlib.callback.NodeCallback;
 
 import java.util.ArrayList;
 
@@ -23,9 +25,9 @@ import androidx.appcompat.app.AppCompatActivity;
 public class OtaActivity extends AppCompatActivity {
 
     public static MeshNetwork network = MeshNetwork.factory;
-    private MyDevice device;
     private TextView versionTextView;
     private TextView stateTextView;
+    public static MeshNode node;
 
     private MeshOtaFile otaFile;
 
@@ -34,17 +36,14 @@ public class OtaActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ota);
 
-        device = DeviceActivity.device;
         versionTextView = findViewById(R.id.version_tv);
         versionTextView.setText(null);
 
-        MeshCommand cmd = MeshCommand.getFirmwareVersion(device.getMeshDevice().getAddress());
-        MeshManager.getInstance().setDeviceCallback(makeDeviceCallback());
-        MeshManager.getInstance().send(cmd);
+        getFirmwareVersion();
 
         TextView latestTextView = findViewById(R.id.latest_tv);
         latestTextView.setText(null);
-        otaFile = MeshOtaManager.getInstance().getLatestOtaFile(device.getDeviceType());
+        otaFile = MeshOtaManager.getInstance().getLatestOtaFile(node.getDeviceType());
         if (otaFile != null) {
             latestTextView.setText(otaFile.getVersion());
         }
@@ -56,20 +55,11 @@ public class OtaActivity extends AppCompatActivity {
         setUpStopButton();
     }
 
-    private DeviceCallback makeDeviceCallback() {
+    @Override
+    protected void onStop() {
+        super.onStop();
 
-        return new DeviceCallback() {
-
-            @Override
-            public void didGetFirmwareVersion(MeshManager manager, int address, String version) {
-
-                if (address != device.getMeshDevice().getAddress()) {
-                    return;
-                }
-
-                versionTextView.setText(version);
-            }
-        };
+        MeshManager.getInstance().disconnect();
     }
 
     private void setUpStartOtaButton() {
@@ -96,7 +86,7 @@ public class OtaActivity extends AppCompatActivity {
                 }
 
                 stateTextView.setText("Connecting...");
-                MeshOtaManager.getInstance().startOta(device.getMeshDevice().getAddress(), network, otaFile, OtaActivity.this);
+                MeshOtaManager.getInstance().startOta(node.getShortAddress(), network, otaFile, OtaActivity.this);
             }
         });
     }
@@ -132,5 +122,17 @@ public class OtaActivity extends AppCompatActivity {
             stateTextView.setText("Stopped");
             MeshOtaManager.getInstance().stopOta();
         });
+    }
+
+    private void getFirmwareVersion() {
+
+        MeshManager.getInstance().setNodeCallback(new NodeCallback() {
+            @Override
+            public void didGetFirmware(MeshManager manager, String firmware) {
+
+                versionTextView.setText(firmware);
+            }
+        });
+        MeshManager.getInstance().readFirmwareWithConnectNode();
     }
 }

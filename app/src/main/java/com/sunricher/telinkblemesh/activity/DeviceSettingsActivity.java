@@ -188,8 +188,10 @@ public class DeviceSettingsActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                Intent intent = new Intent(DeviceSettingsActivity.this, OtaActivity.class);
-                startActivity(intent);
+                MeshManager.getInstance().readFirmwareWithConnectNode();
+
+//                Intent intent = new Intent(DeviceSettingsActivity.this, OtaActivity.class);
+//                startActivity(intent);
             }
         });
     }

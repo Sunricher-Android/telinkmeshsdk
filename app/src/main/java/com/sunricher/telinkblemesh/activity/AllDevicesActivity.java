@@ -1,6 +1,7 @@
 package com.sunricher.telinkblemesh.activity;
 
 import android.bluetooth.BluetoothGatt;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -39,11 +40,17 @@ public class AllDevicesActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AllDevicesAdapter.ViewHolder holder, int position) {
                 Log.i("ALL ", "click " + position);
+
+                MeshManager.getInstance().stopScanNode();
+
+                MeshNode node = nodes.get(position);
+                MeshManager.getInstance().connect(node);
             }
         });
         recyclerView.setAdapter(adapter);
 
         MeshManager.getInstance().setNodeCallback(new NodeCallback() {
+
             @Override
             public void didDiscoverNode(MeshManager manager, MeshNode node) {
 
@@ -53,6 +60,14 @@ public class AllDevicesActivity extends AppCompatActivity {
 
                 nodes.add(node);
                 adapter.addNode(node);
+            }
+
+            @Override
+            public void didLoginNode(MeshManager manager, MeshNode node) {
+
+                Intent intent = new Intent(AllDevicesActivity.this, OtaActivity.class);
+                OtaActivity.node = node;
+                startActivity(intent);
             }
         });
         MeshManager.getInstance().scanNode(MeshNetwork.factory, false, true);
@@ -81,6 +96,7 @@ public class AllDevicesActivity extends AppCompatActivity {
         super.onDestroy();
 
         MeshManager.getInstance().stopScanNode();
+        MeshManager.getInstance().disconnect();
     }
 
     private void reloadNodes(AllDevicesAdapter adapter) {

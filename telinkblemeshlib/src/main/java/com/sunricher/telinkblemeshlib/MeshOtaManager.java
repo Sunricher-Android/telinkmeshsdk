@@ -1,6 +1,5 @@
 package com.sunricher.telinkblemeshlib;
 
-import android.bluetooth.BluetoothGatt;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -110,7 +109,16 @@ public class MeshOtaManager {
 
         this.otaPacketParser.set(data);
 
-        connectNode();
+        if (MeshManager.getInstance().getLogin()
+                && MeshManager.getInstance().getConnectNode().getShortAddress() == address) {
+
+            cancelTimer();
+            startSendData();
+
+        } else {
+
+            connectNode();
+        }
     }
 
     public void stopOta() {
