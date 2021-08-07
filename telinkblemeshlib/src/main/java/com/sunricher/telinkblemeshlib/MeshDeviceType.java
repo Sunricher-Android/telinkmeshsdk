@@ -106,6 +106,7 @@ public class MeshDeviceType {
             case 0x36:
             case 0x66:
             case 0x3C:
+            case 0x20: // Power Metering
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
                 break;
