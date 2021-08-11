@@ -80,10 +80,10 @@ public class OtaActivity extends AppCompatActivity {
                     stateTextView.setText("Ota file is null");
                     return;
                 }
-                if (!otaFile.isNeedUpdate(current)) {
-                    stateTextView.setText("No updates");
-                    return;
-                }
+//                if (!otaFile.isNeedUpdate(current)) {
+//                    stateTextView.setText("No updates");
+//                    return;
+//                }
 
                 stateTextView.setText("Connecting...");
                 MeshOtaManager.getInstance().startOta(node.getShortAddress(), network, otaFile, OtaActivity.this);

@@ -29,10 +29,19 @@ public class MeshOtaManager {
                 return;
             }
 
-            boolean isLast = sendNextOtaPacketCommand();
+            boolean isLast = !otaPacketParser.hasNextPacket();
             boolean isProgressUpdated = otaPacketParser.invalidateProgress();
             int newProgress = otaPacketParser.getProgress();
             Log.i(LOG_TAG, "progress " + newProgress);
+
+            long delay = (otaPacketParser.index == 0) ? 300 : 10;
+
+            getHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    sendNextOtaPacketCommand();
+                }
+            }, delay);
 
             if (callback != null) {
 
@@ -112,6 +121,7 @@ public class MeshOtaManager {
         if (MeshManager.getInstance().getLogin()
                 && MeshManager.getInstance().getConnectNode().getShortAddress() == address) {
 
+            state = State.connecting;
             cancelTimer();
             startSendData();
 
