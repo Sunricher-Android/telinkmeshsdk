@@ -14,8 +14,8 @@ public class MeshNetwork {
 
     public MeshNetwork(String name, String password) {
 
-        assert(name.length() >= 4 && name.length() <= 16);
-        assert(password.length() >= 4 && password.length() <= 16);
+        assert(name.length() >= 2 && name.length() <= 16);
+        assert(password.length() >= 2 && password.length() <= 16);
 
         this.name = name;
         this.password = password;
