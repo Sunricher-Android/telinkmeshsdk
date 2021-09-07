@@ -990,9 +990,9 @@ public final class MeshManager {
                 Log.i(LOG_TAG, "replace address tag");
                 break;
 
-            case MeshCommand.Const.TAG_GET_MAC_NOTIFY:
-                Log.i(LOG_TAG, "get mac tag");
-                this.handleGetMacNotifyData(data);
+            case MeshCommand.Const.TAG_DEVICE_ADDRESS_NOTIFY:
+                Log.i(LOG_TAG, "device address notify tag");
+                this.handleDeviceAddressNotifyData(data);
                 break;
 
             case MeshCommand.Const.TAG_RESET_NETWORK:
@@ -1015,6 +1015,19 @@ public final class MeshManager {
             case MeshCommand.Const.TAG_FIRMWARE_RESPONSE:
                 Log.i(LOG_TAG, "firmware response tag");
                 handleFirmwareResponseData(data);
+                break;
+
+            case MeshCommand.Const.TAG_GET_GROUPS:
+                Log.i(LOG_TAG, "getGroups tag");
+                break;
+
+            case MeshCommand.Const.TAG_RESPONSE_GROUPS:
+                Log.i(LOG_TAG, "responseGroups tag");
+                handleResponseGroupsValue(data);
+                break;
+
+            case MeshCommand.Const.TAG_GROUP_ACTION:
+                Log.i(LOG_TAG, "groupAction tag");
                 break;
 
             default:
@@ -1077,21 +1090,23 @@ public final class MeshManager {
         }
     }
 
-    private void handleGetMacNotifyData(byte[] data) {
+    private void handleDeviceAddressNotifyData(byte[] data) {
 
         MeshCommand command = MeshCommand.makeWithNotifyData(data);
         if (command == null) {
-            Log.e(LOG_TAG, "handleGetMacNotifyData failed, cannot covert to a MeshCommand");
+            Log.e(LOG_TAG, "handleDeviceAddressNotifyData failed, cannot covert to a MeshCommand");
             return;
         }
 
-        int newAddress = command.getParam();
-        byte[] userData = command.getUserData();
-        byte[] macData = new byte[]{userData[6], userData[5], userData[4], userData[3], userData[2], userData[1]};
-        Log.i(LOG_TAG, "handleNewNodeAddressData address " + String.format("%02X", newAddress) + ", " + HexUtil.encodeHexStr(macData));
+        int address = command.getParam();
+        Log.i(LOG_TAG, "handleDeviceAddressNotifyData address " + String.format("%02X", address));
 
         if (nodeCallback != null) {
-            nodeCallback.didGetMac(this, macData, newAddress);
+            nodeCallback.didGetDeviceAddress(this, address);
+        }
+
+        if (deviceCallback != null) {
+            deviceCallback.didGetDeviceAddress(this, address);
         }
     }
 
@@ -1195,6 +1210,33 @@ public final class MeshManager {
 
             default:
                 break;
+        }
+    }
+
+    private void handleResponseGroupsValue(byte[] data) {
+
+        MeshCommand command = MeshCommand.makeWithNotifyData(data);
+        if (command == null) return;
+
+        int firstGroup = command.getParam();
+        if (firstGroup == 0xFF) return;
+
+        ArrayList<Integer> groups = new ArrayList<>();
+        groups.add(firstGroup | 0x8000);
+
+        for (byte item : command.getUserData()) {
+
+            int itemInt = (int)item & 0xFF;
+            if (itemInt == 0xFF) continue;
+            int group = itemInt | 0x8000;
+            if (groups.contains(group)) continue;
+            groups.add(group);
+        }
+
+        Log.i(LOG_TAG, "handleResponseGroupsValue " + command.getSrc() + " didGetGroups " + groups.size());
+
+        if (deviceCallback != null) {
+            deviceCallback.didGetGroups(this, command.getSrc(), groups);
         }
     }
 

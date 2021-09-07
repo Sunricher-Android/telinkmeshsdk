@@ -3,6 +3,7 @@ package com.sunricher.telinkblemesh.activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -15,15 +16,23 @@ import com.sunricher.telinkblemeshlib.MeshCommand;
 import com.sunricher.telinkblemeshlib.MeshDevice;
 import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
-import com.sunricher.telinkblemeshlib.telink.Command;
+import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
 
-import androidx.annotation.RequiresApi;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
 public class DeviceActivity extends AppCompatActivity {
 
+    public static final String LOG_TAG = "DeviceActivity";
+
     public static MyDevice device;
+
+    private ArrayList<Integer> groupList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +45,30 @@ public class DeviceActivity extends AppCompatActivity {
         setSettingsButton();
         setOnOffSwitch();
         setBrightnessSeekbar();
+        setAllGroupsButton();
+        setDeviceGroupsButton();
+        setAddGroupButton();
+        setDeleteGroupButton();
+
+        MeshManager.getInstance().setDeviceCallback(new DeviceCallback() {
+            @Override
+            public void didGetGroups(MeshManager manager, int address, ArrayList<Integer> groups) {
+                Log.i(LOG_TAG, "didGetGroups count " + groups.size());
+
+                HashSet<Integer> temp = new HashSet<>(groupList);
+                temp.addAll(groups);
+                groupList = new ArrayList<Integer>(temp);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    groupList.sort(Comparator.naturalOrder());
+                }
+                Log.i(LOG_TAG, "new groups count " + groupList.size());
+            }
+
+            @Override
+            public void didGetDeviceAddress(MeshManager manager, int address) {
+                Log.i(LOG_TAG, "didGetDeviceAddress " + address);
+            }
+        });
     }
 
     @Override
@@ -54,6 +87,60 @@ public class DeviceActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(DeviceActivity.this, DeviceSettingsActivity.class);
                 DeviceActivity.this.startActivity(intent);
+            }
+        });
+    }
+
+    private void setAllGroupsButton() {
+
+        Button button = findViewById(R.id.groups_btn);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                groupList.clear();
+
+                MeshCommand command = MeshCommand.getGroups(MeshCommand.Address.all);
+                MeshManager.getInstance().send(command);
+            }
+        });
+    }
+
+    private void setDeviceGroupsButton() {
+
+        Button button = findViewById(R.id.device_groups_btn);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                MeshCommand command = MeshCommand.getGroups(device.getMeshDevice().getAddress());
+                MeshManager.getInstance().send(command);
+            }
+        });
+    }
+
+    private void setAddGroupButton() {
+
+        Button button = findViewById(R.id.add_btn);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                MeshCommand command = MeshCommand.addGroup(0xFE, device.getMeshDevice().getAddress());
+                MeshManager.getInstance().send(command);
+            }
+        });
+    }
+
+    private void setDeleteGroupButton() {
+
+        Button button = findViewById(R.id.delete_btn);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                MeshCommand command = MeshCommand.deleteGroup(0xFE, device.getMeshDevice().getAddress());
+                MeshManager.getInstance().send(command);
             }
         });
     }

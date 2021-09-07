@@ -134,7 +134,7 @@ public class AutoPairingManager {
             }
 
             @Override
-            public void didGetMac(MeshManager manager, byte[] macBytes, int address) {
+            public void didGetDeviceAddress(MeshManager manager, int address) {
 
                 if (state != State.addressSetting) return;
                 if (newAddress != address) return;

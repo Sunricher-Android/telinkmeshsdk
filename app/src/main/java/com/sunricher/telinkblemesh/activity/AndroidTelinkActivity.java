@@ -91,13 +91,12 @@ public class AndroidTelinkActivity extends AppCompatActivity {
             }
 
             @Override
-            public void didGetMac(MeshManager manager, byte[] macBytes, int address) {
+            public void didGetDeviceAddress(MeshManager manager, int address) {
 
                 MeshCommand cmd = MeshCommand.requestMacDeviceType(address);
                 MeshManager.getInstance().send(cmd);
 
                 Intent intent = new Intent("MeshManager.didGetMac");
-                intent.putExtra("macBytes", macBytes);
                 intent.putExtra("address", address);
                 LocalBroadcastManager.getInstance(AndroidTelinkActivity.this).sendBroadcast(intent);
             }

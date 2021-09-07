@@ -25,4 +25,9 @@ public abstract class DeviceCallback {
     public void didGetFirmwareVersion(MeshManager manager, int address, String version) {
     }
 
+    public void didGetGroups(MeshManager manager, int address, ArrayList<Integer> groups) {
+    }
+
+    public void didGetDeviceAddress(MeshManager manager, int address) {
+    }
 }

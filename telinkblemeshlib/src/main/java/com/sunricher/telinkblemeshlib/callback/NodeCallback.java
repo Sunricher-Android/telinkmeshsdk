@@ -26,7 +26,7 @@ public abstract class NodeCallback {
     public void didFailToLoginNode(MeshManager manager) {
     }
 
-    public void didGetMac(MeshManager manager, byte[] macBytes, int address) {
+    public void didGetDeviceAddress(MeshManager manager, int address) {
     }
 
     public void didConfirmNewNetwork(MeshManager manager, Boolean isSuccess) {

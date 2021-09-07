@@ -355,6 +355,47 @@ public class MeshCommand {
         return cmd;
     }
 
+    public static MeshCommand getGroups(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_GET_GROUPS;
+        cmd.dst = address;
+        cmd.userData[0] = 0x01;
+        return cmd;
+    }
+
+    public static MeshCommand getGroupDevices(int groupId) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_REPLACE_ADDRESS;
+        cmd.dst = groupId;
+        cmd.param = 0xFF;
+        cmd.userData[0] = (byte) 0xFF;
+        return cmd;
+    }
+
+    public static MeshCommand addGroup(int groupId, int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_GROUP_ACTION;
+        cmd.dst = address;
+        cmd.param = 0x01;
+        cmd.userData[0] = (byte) (groupId & 0xFF);
+        cmd.userData[1] = (byte) 0x80;
+        return cmd;
+    }
+
+    public static MeshCommand deleteGroup(int groupId, int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_GROUP_ACTION;
+        cmd.dst = address;
+        cmd.param = 0x00;
+        cmd.userData[0] = (byte) (groupId & 0xFF);
+        cmd.userData[1] = (byte) 0x80;
+        return cmd;
+    }
+
     private int increaseSeqNo() {
 
         seqNo += 1;
@@ -443,7 +484,7 @@ public class MeshCommand {
 
         static final int TAG_REPLACE_ADDRESS = 0xE0;
 
-        static final int TAG_GET_MAC_NOTIFY = 0xE1;
+        static final int TAG_DEVICE_ADDRESS_NOTIFY = 0xE1;
 
         static final int TAG_RESET_NETWORK = 0xE3;
 
@@ -456,6 +497,12 @@ public class MeshCommand {
         static final int TAG_GET_FIRMWARE = 0xC7;
 
         static final int TAG_FIRMWARE_RESPONSE = 0xC8;
+
+        static final int TAG_GET_GROUPS = 0xDD;
+
+        static final int TAG_RESPONSE_GROUPS = 0xD4;
+
+        static final int TAG_GROUP_ACTION = 0xD7;
 
 
         static final int SR_IDENTIFIER_MAC = 0x76;
