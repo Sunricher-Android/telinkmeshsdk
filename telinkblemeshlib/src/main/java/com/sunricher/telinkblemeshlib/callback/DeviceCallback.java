@@ -1,6 +1,7 @@
 package com.sunricher.telinkblemeshlib.callback;
 
 
+import com.sunricher.telinkblemeshlib.MeshCommand;
 import com.sunricher.telinkblemeshlib.MeshDevice;
 import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
@@ -30,4 +31,14 @@ public abstract class DeviceCallback {
 
     public void didGetDeviceAddress(MeshManager manager, int address) {
     }
+
+    public void didGetLightRunningMode(MeshManager manager, int address, MeshCommand.LightRunningMode mode) {
+    }
+
+    public void didGetLightRunningModeIdList(MeshManager manager, int address, ArrayList<Integer> idList) {
+    }
+
+    public void didGetLightRunningModeId(MeshManager manager, int address, int modeId, int colorsCount, int colorIndex, MeshCommand.LightRunningMode.Color color) {
+    }
+
 }

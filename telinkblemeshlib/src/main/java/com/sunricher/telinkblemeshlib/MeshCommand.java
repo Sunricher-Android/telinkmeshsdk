@@ -1,5 +1,6 @@
 package com.sunricher.telinkblemeshlib;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -352,7 +353,6 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param duration Range `[1, 0xFFFF]`, unit `seconds`.
      */
     public static MeshCommand setLightOnOffDuration(int address, int duration) {
@@ -425,6 +425,121 @@ public class MeshCommand {
         cmd.param = 0x00;
         cmd.userData[0] = (byte) (groupId & 0xFF);
         cmd.userData[1] = (byte) 0x80;
+        return cmd;
+    }
+
+    public static MeshCommand getLightRunningMode(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = (byte) Const.LIGHT_CONTROL_MODE_GET_LIGHT_RUNNING_MODE;
+        return cmd;
+    }
+
+    public static MeshCommand updateLightRunningMode(LightRunningMode mode) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = mode.address;
+        cmd.userData[0] = (byte) Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = (byte) Const.LIGHT_CONTROL_MODE_SET_LIGHT_RUNNING_MODE;
+        cmd.userData[2] = (byte) mode.state;
+
+        switch (mode.state) {
+
+            case LightRunningMode.State.DEFAULT_MODE:
+                cmd.userData[3] = (byte) mode.defaultMode;
+                break;
+
+            case LightRunningMode.State.CUSTOM_MODE:
+                cmd.userData[3] = (byte) mode.customModeId;
+                cmd.userData[4] = (byte) mode.customMode;
+                break;
+        }
+
+        return cmd;
+    }
+
+    /**
+     * @param address
+     * @param speed   range [0x00, 0x0F], 0x00 -> fastest, 0x0F -> slowest.
+     */
+    public static MeshCommand updateLightRunningSpeed(int address, int speed) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = (byte) Const.LIGHT_CONTROL_MODE_SET_LIGHT_RUNNING_SPEED;
+        cmd.userData[2] = (byte) speed;
+        return cmd;
+    }
+
+    public static MeshCommand getLightRunningCustomModeIdList(int address) {
+
+        return getLightRunningCustomModeColors(address, 0x00);
+    }
+
+    /**
+     * @param address
+     * @param modeId  range [0x01, 0x10]
+     */
+    public static MeshCommand getLightRunningCustomModeColors(int address, int modeId) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = (byte) Const.LIGHT_CONTROL_MODE_CUSTOM_LIGHT_RUNNING_MODE;
+        cmd.userData[2] = (byte) 0x00;
+        cmd.userData[3] = (byte) modeId;
+        return cmd;
+    }
+
+    public static ArrayList<MeshCommand> updateLightRunningCustomModeColors(int address, int modeId, ArrayList<LightRunningMode.Color> colors) {
+
+        assert (modeId >= 0x01 && modeId <= 0x10);
+        assert (colors.size() > 0 && colors.size() <= 5);
+
+        ArrayList<MeshCommand> commands = new ArrayList<>();
+
+        for (int i = 0; i < colors.size(); i++) {
+
+            int index = i + 1;
+            LightRunningMode.Color color = colors.get(i);
+
+            MeshCommand cmd = new MeshCommand();
+            cmd.tag = Const.TAG_APP_TO_NODE;
+            cmd.dst = address;
+            cmd.userData[0] = (byte) Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+            cmd.userData[1] = (byte) Const.LIGHT_CONTROL_MODE_CUSTOM_LIGHT_RUNNING_MODE;
+            cmd.userData[2] = (byte) 0x01;
+            cmd.userData[3] = (byte) modeId;
+            cmd.userData[4] = (byte) index;
+            cmd.userData[5] = (byte) color.red;
+            cmd.userData[6] = (byte) color.green;
+            cmd.userData[7] = (byte) color.blue;
+
+            commands.add(cmd);
+        }
+
+        return commands;
+    }
+
+    public static MeshCommand removeLightRunningCustomModeId(int address, int modeId) {
+
+        assert (modeId >= 0x01 && modeId <= 0x10);
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = (byte) Const.LIGHT_CONTROL_MODE_CUSTOM_LIGHT_RUNNING_MODE;
+        cmd.userData[2] = (byte) 0x02;
+        cmd.userData[3] = (byte) modeId;
+
         return cmd;
     }
 
@@ -555,6 +670,203 @@ public class MeshCommand {
 
         static final int LIGHT_CONTROL_MODE_LIGHT_ON_OFF_DURATION = 0x0F;
 
+        static final int LIGHT_CONTROL_MODE_GET_LIGHT_RUNNING_MODE = 0x00;
+
+        static final int LIGHT_CONTROL_MODE_SET_LIGHT_RUNNING_MODE = 0x05;
+
+        static final int LIGHT_CONTROL_MODE_SET_LIGHT_RUNNING_SPEED = 0x03;
+
+        static final int LIGHT_CONTROL_MODE_CUSTOM_LIGHT_RUNNING_MODE = 0x01;
+
+    }
+
+    public static class LightRunningMode {
+
+        private int address;
+
+        private int state = State.STOPPED;
+
+        /**
+         * range [0x01, 0x14]
+         */
+        private int defaultMode = DefaultMode.COLORFUL_MIXED;
+
+        /**
+         * range [0x01, 0x06]
+         */
+        private int customMode = CustomMode.ASCEND_SHADE;
+
+        /**
+         * range [0x00, 0x0F]
+         */
+        private int speed = 0x0A;
+
+        /**
+         * range [0x01, 0x10]
+         */
+        private int customModeId = 0x01;
+
+        private LightRunningMode() {
+
+        }
+
+        public LightRunningMode(int address, int state) {
+            this.address = address;
+            this.state = state;
+        }
+
+        static LightRunningMode makeWithUserData(int address, byte[] userData) {
+
+            if (((int) userData[0] & 0xFF) != Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE) return null;
+            if (((int) userData[1] & 0xFF) != Const.LIGHT_CONTROL_MODE_GET_LIGHT_RUNNING_MODE)
+                return null;
+
+            int state = (int) userData[4] & 0xFF;
+            if (state > 0x02) return null;
+
+            LightRunningMode lightRunningMode = new LightRunningMode(address, state);
+            lightRunningMode.speed = Math.max(0x00, Math.min(0x0F, (int) userData[2] & 0xFF));
+
+            switch (state) {
+
+                case State.STOPPED:
+                    break;
+
+                case State.DEFAULT_MODE:
+                    lightRunningMode.defaultMode = (int) userData[5] & 0xFF;
+                    break;
+
+                case State.CUSTOM_MODE:
+                    lightRunningMode.customModeId = Math.max(0x01, Math.min(0x10, (int) userData[5] & 0xFF));
+                    lightRunningMode.customMode = (int) userData[6] & 0xFF;
+                    break;
+            }
+
+            return lightRunningMode;
+        }
+
+        public int getAddress() {
+            return address;
+        }
+
+        public void setAddress(int address) {
+            this.address = address;
+        }
+
+        public int getState() {
+            return state;
+        }
+
+        public void setState(int state) {
+            this.state = state;
+        }
+
+        public int getDefaultMode() {
+            return defaultMode;
+        }
+
+        public void setDefaultMode(int defaultMode) {
+            this.defaultMode = defaultMode;
+        }
+
+        public int getCustomMode() {
+            return customMode;
+        }
+
+        public void setCustomMode(int customMode) {
+            this.customMode = customMode;
+        }
+
+        public int getSpeed() {
+            return speed;
+        }
+
+        public void setSpeed(int speed) {
+            this.speed = speed;
+        }
+
+        public int getCustomModeId() {
+            return customModeId;
+        }
+
+        public void setCustomModeId(int customModeId) {
+            this.customModeId = customModeId;
+        }
+
+        static final class State {
+
+            static final int STOPPED = 0x00;
+            static final int DEFAULT_MODE = 0x01;
+            static final int CUSTOM_MODE = 0x02;
+        }
+
+        public static final class DefaultMode {
+
+            public static final int COLORFUL_MIXED = 0x01;
+            public static final int RED_SHADE = 0x02;
+            public static final int GREEN_SHADE = 0x03;
+            public static final int BLUE_SHADE = 0x04;
+            public static final int YELLOW_SHADE = 0x05;
+            public static final int CYAN_SHADE = 0x06;
+            public static final int PURPLE_SHADE = 0x07;
+            public static final int WHITE_SHADE = 0x08;
+            public static final int RED_GREEN_SHADE = 0x09;
+            public static final int RED_BLUE_SHADE = 0x0A;
+            public static final int GREEN_BLUE_SHADE = 0x0B;
+            public static final int COLORFUL_STROBE = 0x0C;
+            public static final int RED_STROBE = 0x0D;
+            public static final int GREEN_STROBE = 0x0E;
+            public static final int BLUE_STROBE = 0x0F;
+            public static final int YELLOW_STROBE = 0x10;
+            public static final int CYAN_STROBE = 0x11;
+            public static final int PURPLE_STROBE = 0x12;
+            public static final int WHITE_STROBE = 0x13;
+            public static final int COLORFUL_JUMP = 0x14;
+        }
+
+        public static final class CustomMode {
+
+            public static final int ASCEND_SHADE = 0x01;
+            public static final int DESCEND_SHADE = 0x02;
+            public static final int ASCEND_DESCEND_SHADE = 0x03;
+            public static final int MIXED_SHADE = 0x04;
+            public static final int JUMP = 0x05;
+            public static final int STROBE = 0x06;
+        }
+
+        /**
+         * red, green, blue range [0, 255]
+         */
+        public static class Color {
+
+            private int red;
+            private int green;
+            private int blue;
+
+            public int getRed() {
+                return red;
+            }
+
+            public void setRed(int red) {
+                this.red = red;
+            }
+
+            public int getGreen() {
+                return green;
+            }
+
+            public void setGreen(int green) {
+                this.green = green;
+            }
+
+            public int getBlue() {
+                return blue;
+            }
+
+            public void setBlue(int blue) {
+                this.blue = blue;
+            }
+        }
     }
 
 }

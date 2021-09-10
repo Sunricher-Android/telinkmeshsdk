@@ -1027,6 +1027,7 @@ public final class MeshManager {
 
             case MeshCommand.Const.TAG_APP_TO_NODE:
                 Log.i(LOG_TAG, "app to node tag");
+                this.handleNodeToAppData(data);
                 break;
 
             case MeshCommand.Const.TAG_ON_OFF:
@@ -1286,6 +1287,67 @@ public final class MeshManager {
                     LightOnOffDurationEvent event = new LightOnOffDurationEvent(command.getSrc(), duration);
                     deviceEventCallback.didUpdateEvent(this, event);
                 }
+                break;
+
+            case MeshCommand.Const.LIGHT_CONTROL_MODE_GET_LIGHT_RUNNING_MODE:
+
+                Log.i(LOG_TAG, "getLightRunningMode response");
+                MeshCommand.LightRunningMode runningMode = MeshCommand.LightRunningMode.makeWithUserData(command.getSrc(), command.getUserData());
+                if (runningMode == null) return;
+                if (deviceCallback == null) return;
+                deviceCallback.didGetLightRunningMode(this, command.getSrc(), runningMode);
+                break;
+
+            case MeshCommand.Const.LIGHT_CONTROL_MODE_SET_LIGHT_RUNNING_MODE:
+                Log.i(LOG_TAG, "setLightRunningMode");
+                break;
+
+            case MeshCommand.Const.LIGHT_CONTROL_MODE_SET_LIGHT_RUNNING_SPEED:
+                Log.i(LOG_TAG, "setLightRunningSpeed");
+                break;
+
+            case MeshCommand.Const.LIGHT_CONTROL_MODE_CUSTOM_LIGHT_RUNNING_MODE:
+
+                Log.i(LOG_TAG, "customLightRunningMode");
+
+                if (((int) command.getUserData()[2] & 0xFF) != 0x00) {
+
+                    Log.i(LOG_TAG, "customLightRunningMode init failed.");
+                    return;
+                }
+
+                int userData3 = (int) command.getUserData()[3] & 0xFF;
+
+                if (userData3 == 0x00) {
+
+                    int value = (((int) command.getUserData()[4] & 0xFF) << 8) | ((int) command.getUserData()[5] & 0xFF);
+                    ArrayList<Integer> modeIds = new ArrayList<>();
+                    for (int i = 0; i < 16; i++) {
+                        if (((0x01 << i) & value) > 0) {
+                            modeIds.add(i + 1);
+                        }
+                    }
+                    Log.i(LOG_TAG, "customLightRunningMode idList count " + modeIds.size());
+
+                    if (deviceCallback == null) return;
+                    deviceCallback.didGetLightRunningModeIdList(this, command.getSrc(), modeIds);
+
+                } else if (userData3 <= 0x10) {
+
+                    int modeId = (int) command.getUserData()[3] & 0xFF;
+                    int colorsCount = (int) command.getUserData()[4] & 0xFF;
+                    int colorIndex = (int) command.getUserData()[5] & 0xFF;
+                    MeshCommand.LightRunningMode.Color color = new MeshCommand.LightRunningMode.Color();
+                    color.setRed((int) command.getUserData()[6] & 0xFF);
+                    color.setGreen((int) command.getUserData()[7] & 0xFF);
+                    color.setBlue((int) command.getUserData()[8] & 0xFF);
+
+                    Log.i(LOG_TAG, "LightRunningColor modeId " + modeId + " count " + colorsCount + " index " + colorIndex);
+
+                    if (deviceCallback == null) return;
+                    deviceCallback.didGetLightRunningModeId(this, command.getSrc(), modeId, colorsCount, colorIndex, color);
+                }
+
                 break;
 
             default:
