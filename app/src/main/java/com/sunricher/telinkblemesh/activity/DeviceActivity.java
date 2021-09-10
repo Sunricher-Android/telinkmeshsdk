@@ -16,6 +16,7 @@ import com.sunricher.telinkblemeshlib.MeshCommand;
 import com.sunricher.telinkblemeshlib.MeshDevice;
 import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
+import com.sunricher.telinkblemeshlib.MqttMessage;
 import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
 
 import java.util.ArrayList;
@@ -152,7 +153,8 @@ public class DeviceActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isOn) {
                 MeshCommand cmd = MeshCommand.turnOnOff(device.getMeshDevice().getAddress(), isOn, 0);
-                MeshManager.getInstance().send(cmd);
+                MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"));
+//                MeshManager.getInstance().send(cmd);
             }
         });
 
@@ -177,7 +179,8 @@ public class DeviceActivity extends AppCompatActivity {
                 if (fromUser) {
 
                     MeshCommand cmd = MeshCommand.setBrightness(device.getMeshDevice().getAddress(), value);
-                    MeshManager.getInstance().sendSample(cmd);
+//                    MeshManager.getInstance().sendSample(cmd);
+                    MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"), true);
                 }
             }
 
@@ -190,7 +193,8 @@ public class DeviceActivity extends AppCompatActivity {
             public void onStopTrackingTouch(SeekBar seekBar) {
 
                 MeshCommand cmd = MeshCommand.setBrightness(device.getMeshDevice().getAddress(), seekBar.getProgress());
-                MeshManager.getInstance().send(cmd);
+//                MeshManager.getInstance().send(cmd);
+                MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"), false);
             }
         });
     }

@@ -20,7 +20,13 @@ import com.clj.fastble.exception.BleException;
 import com.clj.fastble.scan.BleScanRuleConfig;
 import com.clj.fastble.utils.HexUtil;
 import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
+import com.sunricher.telinkblemeshlib.callback.DeviceEventCallback;
 import com.sunricher.telinkblemeshlib.callback.NodeCallback;
+import com.sunricher.telinkblemeshlib.mqttdeviceevent.DateEvent;
+import com.sunricher.telinkblemeshlib.mqttdeviceevent.DeviceTypeEvent;
+import com.sunricher.telinkblemeshlib.mqttdeviceevent.FirmwareEvent;
+import com.sunricher.telinkblemeshlib.mqttdeviceevent.LightOnOffDurationEvent;
+import com.sunricher.telinkblemeshlib.mqttdeviceevent.StateEvent;
 import com.sunricher.telinkblemeshlib.telink.AES;
 import com.sunricher.telinkblemeshlib.telink.Arrays;
 import com.sunricher.telinkblemeshlib.telink.Command;
@@ -61,6 +67,7 @@ public final class MeshManager {
     private MeshNode connectNode;
     private NodeCallback nodeCallback;
     private DeviceCallback deviceCallback;
+    private DeviceEventCallback deviceEventCallback;
     private BleScanCallback scanCallback;
     private BleGattCallback gattCallback;
     private BleNotifyCallback notifyCallback;
@@ -220,6 +227,10 @@ public final class MeshManager {
         this.deviceCallback = deviceCallback;
     }
 
+    public void setDeviceEventCallback(DeviceEventCallback deviceEventCallback) {
+        this.deviceEventCallback = deviceEventCallback;
+    }
+
     /**
      * Scan mesh devices in the current network after login.
      */
@@ -277,6 +288,50 @@ public final class MeshManager {
     void send(MeshCommand command, long interval) {
 
         this.commandExecutor.executeCommand(command, interval);
+    }
+
+    void send(MeshCommand command, boolean isSample) {
+
+        if (isSample) {
+
+            sendSample(command);
+
+        } else {
+
+            send(command);
+        }
+    }
+
+    public void sendMqttMessage(String message) {
+
+        this.sendMqttMessage(message, false);
+    }
+
+    public void sendMqttMessage(String message, boolean isSample) {
+
+        MqttCommand mqttCommand = MqttCommand.makeCommandWithMqttMessage(message);
+        if (mqttCommand == null) {
+
+            Log.i(LOG_TAG, "send mqtt message failed, wrong message " + message);
+            return;
+        }
+
+        Log.i(LOG_TAG, "Will send mqtt message " + message);
+
+        switch (mqttCommand.getCommandType()) {
+
+            case MqttCommand.PAYLOAD_TYPE_COMMAND:
+
+                MeshCommand command = MeshCommand.makeWithMqttCommandData(mqttCommand.getData());
+                if (command != null) {
+                    send(command, isSample);
+                }
+                break;
+
+            case MqttCommand.PAYLOAD_TYPE_SCAN_MESH_DEVICES:
+                scanMeshDevices();
+                break;
+        }
     }
 
     void setNewNetwork(MeshNetwork newNetwork, boolean isMesh) {
@@ -1049,6 +1104,11 @@ public final class MeshManager {
         if (deviceCallback != null) {
             deviceCallback.didUpdateMeshDevices(this, devices);
         }
+
+        if (deviceEventCallback != null) {
+            StateEvent event = new StateEvent(devices);
+            deviceEventCallback.didUpdateEvent(this, event);
+        }
     }
 
     private void handleNodeToAppData(byte[] data) {
@@ -1076,6 +1136,11 @@ public final class MeshManager {
 
                 if (this.deviceCallback != null) {
                     this.deviceCallback.didUpdateDeviceType(this, address, deviceType, macData);
+                }
+
+                if (this.deviceEventCallback != null) {
+                    DeviceTypeEvent event = new DeviceTypeEvent(address, deviceType, macData);
+                    this.deviceEventCallback.didUpdateEvent(this, event);
                 }
                 break;
 
@@ -1154,6 +1219,11 @@ public final class MeshManager {
         if (deviceCallback != null) {
             deviceCallback.didGetDate(this, command.getSrc(), date);
         }
+
+        if (deviceEventCallback != null) {
+            DateEvent event = new DateEvent(command.getSrc(), date);
+            deviceEventCallback.didUpdateEvent(this, event);
+        }
     }
 
     private void handleFirmwareResponseData(byte[] data) {
@@ -1182,6 +1252,11 @@ public final class MeshManager {
                 deviceCallback.didGetFirmwareVersion(this, command.getSrc(), currentVersion);
             }
 
+            if (deviceEventCallback != null) {
+                FirmwareEvent event = new FirmwareEvent(command.getSrc(), currentVersion);
+                deviceEventCallback.didUpdateEvent(this, event);
+            }
+
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -1206,6 +1281,11 @@ public final class MeshManager {
                 if (deviceCallback != null) {
                     deviceCallback.didGetLightOnOffDuration(this, command.getSrc(), duration);
                 }
+
+                if (deviceEventCallback != null) {
+                    LightOnOffDurationEvent event = new LightOnOffDurationEvent(command.getSrc(), duration);
+                    deviceEventCallback.didUpdateEvent(this, event);
+                }
                 break;
 
             default:
@@ -1226,7 +1306,7 @@ public final class MeshManager {
 
         for (byte item : command.getUserData()) {
 
-            int itemInt = (int)item & 0xFF;
+            int itemInt = (int) item & 0xFF;
             if (itemInt == 0xFF) continue;
             int group = itemInt | 0x8000;
             if (groups.contains(group)) continue;

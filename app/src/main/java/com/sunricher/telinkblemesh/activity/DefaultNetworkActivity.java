@@ -16,6 +16,7 @@ import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
 import com.sunricher.telinkblemeshlib.MeshNetwork;
 import com.sunricher.telinkblemeshlib.MeshNode;
+import com.sunricher.telinkblemeshlib.MqttMessage;
 import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
 import com.sunricher.telinkblemeshlib.callback.NodeCallback;
 
@@ -72,7 +73,10 @@ public class DefaultNetworkActivity extends AppCompatActivity {
                 Log.i(LOG_TAG, "didLoginNode " + node.getDescription());
 
                 setConnecting(false);
-                MeshManager.getInstance().scanMeshDevices();
+//                MeshManager.getInstance().scanMeshDevices();
+
+                String message = MqttMessage.scanMeshDevices("wd");
+                MeshManager.getInstance().sendMqttMessage(message);
             }
 
             @Override

@@ -77,6 +77,38 @@ public class MeshCommand {
         return command;
     }
 
+    static MeshCommand makeWithMqttCommandData(byte[] data) {
+
+        if (data.length != 20) {
+            return null;
+        }
+
+        MeshCommand command = new MeshCommand();
+
+        int tempSrc = ((int) data[3] & 0xFF);
+        tempSrc |= ((int) data[4] & 0xFF) << 8;
+        command.src = tempSrc;
+
+        int tempDst = ((int) data[5]);
+        tempDst |= ((int) data[6] & 0xFF) << 8;
+        command.dst = tempDst;
+
+        command.tag = ((int) data[7] & 0xFF);
+
+        int tempVendorId = ((int) data[8] & 0xFF) << 8;
+        tempVendorId |= ((int) data[9] & 0xFF);
+        command.vendorId = tempVendorId;
+
+        command.param = ((int) data[10] & 0xFF);
+
+        for (int i = 0; i < 9; i++) {
+            int dataIndex = i + 11;
+            command.userData[i] = data[dataIndex];
+        }
+
+        return command;
+    }
+
     /**
      * Telink cmd, request mac address.
      */

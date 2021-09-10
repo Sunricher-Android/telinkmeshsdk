@@ -1,6 +1,7 @@
 package com.sunricher.telinkblemeshlib;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MeshDevice {
 
@@ -101,7 +102,30 @@ public class MeshDevice {
         this.version = version;
     }
 
+    public HashMap<String, Object> getItemValue() {
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("short_address", getAddress());
+        map.put("state", getState().getStateString());
+        map.put("brightness", getBrightness());
+
+        return map;
+    }
+
     public enum State {
-        offline, on, off
+
+        offline, on, off;
+
+        String getStateString() {
+            switch (this) {
+                case on:
+                    return "ON";
+                case off:
+                    return "OFF";
+                case offline:
+                    return "OFFLINE";
+            }
+            return "";
+        }
     }
 }
