@@ -1,6 +1,5 @@
 package com.sunricher.telinkblemeshlib;
 
-import android.graphics.LightingColorFilter;
 import android.util.ArraySet;
 
 public class MeshDeviceType {
@@ -9,6 +8,8 @@ public class MeshDeviceType {
     private int rawValue2;
     private Category category;
     private ArraySet<Capability> capabilities = new ArraySet<>();
+
+    private LightType lightType  = LightType.onOff;
 
     MeshDeviceType(int deviceType, int subDeviceType) {
 
@@ -83,6 +84,10 @@ public class MeshDeviceType {
         }
     }
 
+    public LightType getLightType() {
+        return lightType;
+    }
+
     private ArraySet<Capability> getLightCapabilities(int subDeviceType) {
 
         ArraySet<Capability> capabilities = new ArraySet<>();
@@ -95,6 +100,7 @@ public class MeshDeviceType {
             case 0x30:
             case 0x60:
                 capabilities.add(Capability.onOff);
+                lightType = LightType.onOff;
                 break;
 
             // DIM
@@ -109,6 +115,7 @@ public class MeshDeviceType {
             case 0x20: // Power Metering
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
+                lightType = LightType.dim;
                 break;
 
             // CCT
@@ -120,6 +127,7 @@ public class MeshDeviceType {
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
                 capabilities.add(Capability.colorTemperature);
+                lightType = LightType.cct;
                 break;
 
             // RGB
@@ -128,6 +136,7 @@ public class MeshDeviceType {
                 capabilities.add(Capability.onOff);
                 capabilities.add(Capability.brightness);
                 capabilities.add(Capability.rgb);
+                lightType = LightType.rgb;
                 break;
 
             // RGBW
@@ -137,6 +146,7 @@ public class MeshDeviceType {
                 capabilities.add(Capability.brightness);
                 capabilities.add(Capability.rgb);
                 capabilities.add(Capability.white);
+                lightType = LightType.rgbw;
                 break;
 
             // RGB CCT
@@ -146,6 +156,7 @@ public class MeshDeviceType {
                 capabilities.add(Capability.brightness);
                 capabilities.add(Capability.rgb);
                 capabilities.add(Capability.colorTemperature);
+                lightType = LightType.rgbCct;
                 break;
 
         }
@@ -247,28 +258,6 @@ public class MeshDeviceType {
         return this.rawValue1 == other.rawValue1 && this.rawValue2 == other.rawValue2;
     }
 
-    public enum Category {
-        light,
-        remote,
-        sensor,
-        transmitter,
-        peripheral,
-        curtain,
-        outlet,
-        bridge,
-        rfPa,
-        customPanel,
-        unsupported,
-    }
-
-    public enum Capability {
-        onOff,
-        brightness,
-        colorTemperature,
-        white,
-        rgb,
-    }
-
     public boolean isSupportMeshAdd() {
 
         switch (this.category) {
@@ -296,5 +285,37 @@ public class MeshDeviceType {
             default:
                 return false;
         }
+    }
+
+    public enum Category {
+        light,
+        remote,
+        sensor,
+        transmitter,
+        peripheral,
+        curtain,
+        outlet,
+        bridge,
+        rfPa,
+        customPanel,
+        unsupported,
+    }
+
+    public enum Capability {
+        onOff,
+        brightness,
+        colorTemperature,
+        white,
+        rgb,
+    }
+
+    public enum LightType {
+
+        onOff,
+        dim,
+        cct,
+        rgb,
+        rgbw,
+        rgbCct
     }
 }
