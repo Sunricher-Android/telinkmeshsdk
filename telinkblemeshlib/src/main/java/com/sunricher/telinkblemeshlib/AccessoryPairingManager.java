@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class AutoPairingManager {
+public class AccessoryPairingManager {
 
     static final String LOG_TAG = "AutoPairingManager";
     private final long connectingInterval = 16000;
@@ -27,12 +27,12 @@ public class AutoPairingManager {
     private State state = State.stopped;
     private Application ctx;
 
-    private AutoPairingManager() {
+    private AccessoryPairingManager() {
 
     }
 
-    public static AutoPairingManager getInstance() {
-        return AutoPairingManager.SingletonHolder.instance;
+    public static AccessoryPairingManager getInstance() {
+        return AccessoryPairingManager.SingletonHolder.instance;
     }
 
     public void setCallback(Callback callback) {
@@ -69,6 +69,8 @@ public class AutoPairingManager {
 
             @Override
             public void didDiscoverNode(MeshManager manager, MeshNode node) {
+
+                if (node.getDeviceType().isSupportMeshAdd()) return;
 
                 if (state != State.scanning) {
                     return;
@@ -111,14 +113,14 @@ public class AutoPairingManager {
                         @Override
                         public void run() {
 
-                            callback.terminalWithNoMoreNewAddresses(AutoPairingManager.this);
+                            callback.terminalWithNoMoreNewAddresses(AccessoryPairingManager.this);
                         }
                     });
 
                     return;
                 }
 
-                AutoPairingManager.this.newAddress = newAddress;
+                AccessoryPairingManager.this.newAddress = newAddress;
                 MeshCommand cmd = MeshCommand.changeAddress(MeshCommand.Address.connectNode, newAddress);
                 MeshManager.getInstance().send(cmd);
 
@@ -168,7 +170,7 @@ public class AutoPairingManager {
                         @Override
                         public void run() {
 
-                            callback.didAddNode(AutoPairingManager.this, node, newAddress);
+                            callback.didAddNode(AccessoryPairingManager.this, node, newAddress);
                         }
                     });
                 }
@@ -182,7 +184,7 @@ public class AutoPairingManager {
 
     public void stop() {
 
-        Log.i(LOG_TAG, "stop auto pairing");
+        Log.i(LOG_TAG, "stop accessory pairing");
 
         state = State.stopped;
         cancelTimer();
@@ -227,15 +229,15 @@ public class AutoPairingManager {
     }
 
     private static class SingletonHolder {
-        private static final AutoPairingManager instance = new AutoPairingManager();
+        private static final AccessoryPairingManager instance = new AccessoryPairingManager();
     }
 
     public abstract static class Callback {
 
-        public void terminalWithNoMoreNewAddresses(AutoPairingManager manager) {
+        public void terminalWithNoMoreNewAddresses(AccessoryPairingManager manager) {
         }
 
-        public void didAddNode(AutoPairingManager manager, MeshNode node, int newAddress) {
+        public void didAddNode(AccessoryPairingManager manager, MeshNode node, int newAddress) {
         }
     }
 }

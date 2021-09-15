@@ -832,6 +832,9 @@ public final class MeshManager {
             @Override
             public void onScanning(BleDevice bleDevice) {
 
+                int rssi = bleDevice.getRssi();
+                if (rssi > 0 || rssi < -75) return;
+
                 MeshNode node = MeshNode.make(bleDevice);
                 if (node == null) {
                     return;

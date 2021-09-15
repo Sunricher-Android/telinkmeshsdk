@@ -17,7 +17,7 @@ import java.util.TimerTask;
 
 import androidx.annotation.Nullable;
 
-public class BridgePairingManager {
+public class DevicePairingManager {
 
     private static final String LOG_TAG = "BridgePairingManager";
     private final long scanningInterval = 8000;
@@ -32,17 +32,18 @@ public class BridgePairingManager {
     private List<PairingModel> models = new ArrayList<>();
     private Application ctx;
     private Callback callback;
+    private MeshNode mainNode;
 
-    private BridgePairingManager() {
+    private DevicePairingManager() {
 
+    }
+
+    public static DevicePairingManager getInstance() {
+        return SingletonHolder.instance;
     }
 
     public void setCallback(Callback callback) {
         this.callback = callback;
-    }
-
-    public static BridgePairingManager getInstance() {
-        return SingletonHolder.instance;
     }
 
     public void startPairing(MeshNetwork network, Application ctx) {
@@ -84,8 +85,9 @@ public class BridgePairingManager {
 
     public void stop() {
 
-        Log.i(LOG_TAG, "stop bridge pairing");
+        Log.i(LOG_TAG, "stop device pairing");
 
+        mainNode = null;
         models.clear();
         state = State.stopped;
         cancelTimer();
@@ -128,6 +130,28 @@ public class BridgePairingManager {
             @Override
             public void didDiscoverNode(MeshManager manager, MeshNode node) {
 
+                if (state == State.checking) {
+
+                    if (mainNode == null) return;
+                    if (mainNode.getMacAddress().equalsIgnoreCase(node.getMacAddress())) {
+
+                        cancelTimer();
+                        state = State.connecting;
+
+                        MeshManager.getInstance().connect(node);
+
+                        timer = new Timer();
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                scanningConnectingTimerAction();
+                            }
+                        }, connectingInterval);
+                    }
+
+                    return;
+                }
+
                 if (state != State.scanning) return;
                 if (!node.getDeviceType().isSafeConnection()) return;
 
@@ -147,6 +171,29 @@ public class BridgePairingManager {
 
             @Override
             public void didLoginNode(MeshManager manager, MeshNode node) {
+
+                if (mainNode != null && node.getMacAddress().equalsIgnoreCase(mainNode.getMacAddress())) {
+
+                    cancelTimer();
+                    state = State.networkSetting;
+
+                    Log.i(LOG_TAG, "checking setNewNetwork");
+
+                    MeshManager.getInstance().setNewNetwork(network, false);
+
+                    timer = new Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+
+                            networkSettingHandler();
+                        }
+                    }, networkSettingInterval);
+
+                    return;
+                }
+
+                mainNode = node;
 
                 if (state != State.connecting) return;
 
@@ -169,7 +216,7 @@ public class BridgePairingManager {
             public void didGetFirmware(MeshManager manager, String firmware) {
 
                 if (state != State.networkSetting) return;
-                Log.i(LOG_TAG, "bridge pairing did get firmware " + firmware);
+                Log.i(LOG_TAG, "Device pairing did get firmware " + firmware);
             }
         };
     }
@@ -198,7 +245,7 @@ public class BridgePairingManager {
                             @Override
                             public void run() {
 
-                                callback.terminalWithUnsupportedDevice(BridgePairingManager.this, address, deviceType, macData);
+                                callback.terminalWithUnsupportedDevice(DevicePairingManager.this, address, deviceType, macData);
                             }
                         });
                     }
@@ -215,7 +262,7 @@ public class BridgePairingManager {
                             @Override
                             public void run() {
 
-                                callback.terminalWithNoMoreNewAddresses(BridgePairingManager.this);
+                                callback.terminalWithNoMoreNewAddresses(DevicePairingManager.this);
                             }
                         });
                     }
@@ -252,35 +299,12 @@ public class BridgePairingManager {
             @Override
             public void run() {
 
-                callback.failToConnect(BridgePairingManager.this);
+                callback.failToConnect(DevicePairingManager.this);
             }
         });
     }
 
     private void deviceGettingTimerAction() {
-
-        if (models.size() < 2) return;
-
-        boolean hasBridge = false;
-        for (PairingModel model : models) {
-            if (model.deviceType.getCategory() == MeshDeviceType.Category.bridge) {
-                hasBridge = true;
-                break;
-            }
-        }
-        if (!hasBridge) {
-
-            stop();
-            if (callback != null) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        callback.terminalWithNoBridgeFound(BridgePairingManager.this);
-                    }
-                });
-            }
-            return;
-        }
 
         Log.i(LOG_TAG, "change models addresses");
 
@@ -315,24 +339,51 @@ public class BridgePairingManager {
 
         Log.i(LOG_TAG, "networkSetting");
 
-        MeshManager.getInstance().setNewNetwork(network, true);
+        MeshManager.getInstance().setNewNetwork(network, false);
 
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
 
-                stop();
-                if (callback == null) return;
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        callback.didFinish(BridgePairingManager.this);
-                    }
-                });
+                networkSettingHandler();
             }
         }, networkSettingInterval);
+    }
+
+    private void networkSettingHandler() {
+
+        Log.i(LOG_TAG, "networkSettingsHandler " + network.getName() + " " + network.getPassword());
+
+        cancelTimer();
+        state = State.checking;
+
+        MeshManager.getInstance().setNodeCallback(makeNodeCallback());
+        MeshManager.getInstance().setDeviceCallback(makeDeviceCallback());
+        MeshManager.getInstance().scanNode(MeshNetwork.factory);
+
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                checkingTimerAction();
+            }
+        }, scanningInterval);
+    }
+
+    private void checkingTimerAction() {
+
+        stop();
+        if (callback != null) {
+
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+
+                    callback.didFinish(DevicePairingManager.this);
+                }
+            });
+        }
     }
 
     private enum State {
@@ -341,7 +392,8 @@ public class BridgePairingManager {
         connecting,
         devicesGetting,
         addressChanging,
-        networkSetting
+        networkSetting,
+        checking
     }
 
     private static class PairingModel {
@@ -371,24 +423,21 @@ public class BridgePairingManager {
     }
 
     private static final class SingletonHolder {
-        public static final BridgePairingManager instance = new BridgePairingManager();
+        public static final DevicePairingManager instance = new DevicePairingManager();
     }
 
     public abstract static class Callback {
 
-        public void terminalWithNoMoreNewAddresses(BridgePairingManager manager) {
+        public void terminalWithNoMoreNewAddresses(DevicePairingManager manager) {
         }
 
-        public void failToConnect(BridgePairingManager manager) {
+        public void failToConnect(DevicePairingManager manager) {
         }
 
-        public void terminalWithNoBridgeFound(BridgePairingManager manager) {
+        public void didFinish(DevicePairingManager manager) {
         }
 
-        public void didFinish(BridgePairingManager manager) {
-        }
-
-        public void terminalWithUnsupportedDevice(BridgePairingManager manager, int address, MeshDeviceType deviceType, byte[] macData) {
+        public void terminalWithUnsupportedDevice(DevicePairingManager manager, int address, MeshDeviceType deviceType, byte[] macData) {
         }
     }
 }

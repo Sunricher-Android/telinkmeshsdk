@@ -9,7 +9,7 @@ import android.widget.Toast;
 
 import com.sunricher.telinkblemesh.R;
 import com.sunricher.telinkblemesh.adapter.AllDevicesAdapter;
-import com.sunricher.telinkblemeshlib.AutoPairingManager;
+import com.sunricher.telinkblemeshlib.AccessoryPairingManager;
 import com.sunricher.telinkblemeshlib.MeshNetwork;
 import com.sunricher.telinkblemeshlib.MeshNode;
 
@@ -49,18 +49,18 @@ public class SinglePairingActivity extends AppCompatActivity {
 
                 nodes.clear();
                 adapter.clear();
-                AutoPairingManager.getInstance().startPairing(network, getApplication());
+                AccessoryPairingManager.getInstance().startPairing(network, getApplication());
             }
         });
 
-        AutoPairingManager.getInstance().setCallback(new AutoPairingManager.Callback() {
+        AccessoryPairingManager.getInstance().setCallback(new AccessoryPairingManager.Callback() {
             @Override
-            public void terminalWithNoMoreNewAddresses(AutoPairingManager manager) {
+            public void terminalWithNoMoreNewAddresses(AccessoryPairingManager manager) {
                 Toast.makeText(SinglePairingActivity.this, "No more addresses", Toast.LENGTH_LONG).show();
             }
 
             @Override
-            public void didAddNode(AutoPairingManager manager, MeshNode node, int newAddress) {
+            public void didAddNode(AccessoryPairingManager manager, MeshNode node, int newAddress) {
 
                 Log.i("AutoPairing","did add node");
 
@@ -78,6 +78,6 @@ public class SinglePairingActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
-        AutoPairingManager.getInstance().stop();
+        AccessoryPairingManager.getInstance().stop();
     }
 }
