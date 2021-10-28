@@ -2,6 +2,7 @@ package com.sunricher.telinkblemeshlib;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class MeshDevice {
 
@@ -10,12 +11,16 @@ public class MeshDevice {
     private ArrayList<Integer> groupAddress = new ArrayList<>();
     private int brightness = 0;
     private String version = "nil";
+    private Map<String, Object> userValues = new HashMap<>();
 
     private MeshDevice() {
 
     }
 
-    private static MeshDevice make(int address, Boolean isOnline, int brightness) {
+    /**
+     * If `address` is 0, return null.
+     */
+    public static MeshDevice make(int address, Boolean isOnline, int brightness) {
         if (address == 0) return null;
 
         MeshDevice meshDevice = new MeshDevice();
@@ -100,6 +105,22 @@ public class MeshDevice {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    /**
+     *
+     * @return It's always null if you don't change it.
+     */
+    public Map<String, Object> getUserValues() {
+        return userValues;
+    }
+
+    /**
+     *
+     * @return It's always null if you don't change it.
+     */
+    public void setUserValues(Map<String, Object> userValues) {
+        this.userValues = userValues;
     }
 
     public HashMap<String, Object> getItemValue() {

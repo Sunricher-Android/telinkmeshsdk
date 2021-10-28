@@ -11,7 +11,7 @@ public class MeshDeviceType {
 
     private LightType lightType  = LightType.onOff;
 
-    MeshDeviceType(int deviceType, int subDeviceType) {
+    public MeshDeviceType(int deviceType, int subDeviceType) {
 
         this.rawValue1 = deviceType;
         this.rawValue2 = subDeviceType;

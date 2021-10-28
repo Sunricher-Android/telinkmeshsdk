@@ -313,8 +313,8 @@ public class MeshCommand {
         cmd.dst = address;
         cmd.param = Const.SINGLE_CHANNEL_RGB;
         cmd.userData[0] = (byte) (red & 0xFF);
-        cmd.userData[0] = (byte) (green & 0xFF);
-        cmd.userData[0] = (byte) (blue & 0xFF);
+        cmd.userData[1] = (byte) (green & 0xFF);
+        cmd.userData[2] = (byte) (blue & 0xFF);
         return cmd;
     }
 
