@@ -379,6 +379,102 @@ public class MeshCommand {
         return cmd;
     }
 
+    public static MeshCommand setLightSwitchType(int address, int lightSwitchType) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = Const.SR_IDENTIFIER_LIGHT_SWITCH_TYPE;
+        cmd.userData[1] = 0x01; // set
+        cmd.userData[2] = (byte) (lightSwitchType & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand getLightSwitchType(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = Const.SR_IDENTIFIER_LIGHT_SWITCH_TYPE;
+        cmd.userData[1] = 0x00; // get
+        return cmd;
+    }
+
+    /**
+     *
+     * @param address
+     * @param frequency Range `[500, 10_000]`, unit `Hz`.
+     * @return
+     */
+    public static MeshCommand setLightPwmFrequency(int address, int frequency) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = Const.LIGHT_CONTROL_MODE_LIGHT_PWM_FREQUENCY;
+        cmd.userData[2] = 0x01; // set
+        cmd.userData[3] = (byte) (frequency & 0xFF);
+        cmd.userData[4] = (byte) ((frequency >> 8) & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand getLightPwmFrequency(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = Const.LIGHT_CONTROL_MODE_LIGHT_PWM_FREQUENCY;
+        cmd.userData[2] = 0x00; // get
+        return cmd;
+    }
+
+    /**
+     * The device enters pairing mode for 5 seconds after receiving this command.
+     */
+    public static MeshCommand enablePairing(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = Const.SR_IDENTIFIER_SPECIAL;
+        cmd.userData[1] = 0x01; //enable pairing
+        return cmd;
+    }
+
+    /**
+     *
+     * @param address
+     * @param isEnabled If `true`, the other channels will be closed when change the RGB,
+     *                  the RGB will be closed when change the other channels.
+     * @return
+     */
+    public static MeshCommand setRgbIndependence(int address, boolean isEnabled) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = Const.LIGHT_CONTROL_MODE_CHANNEL_MODE;
+        cmd.userData[2] = 0x04; // RGB independence
+        cmd.userData[3] = 0x01; // set
+        cmd.userData[4] = (byte) (isEnabled ? 0x01 : 0x00);
+        return cmd;
+    }
+
+    public static MeshCommand getRgbIndependence(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = Const.SR_IDENTIFIER_LIGHT_CONTROL_MODE;
+        cmd.userData[1] = Const.LIGHT_CONTROL_MODE_CHANNEL_MODE;
+        cmd.userData[2] = 0x04; // RGB independence
+        cmd.userData[3] = 0x00; // get
+        return cmd;
+    }
+
     public static MeshCommand getFirmwareVersion(int address) {
 
         MeshCommand cmd = new MeshCommand();
@@ -678,6 +774,22 @@ public class MeshCommand {
 
         static final int LIGHT_CONTROL_MODE_CUSTOM_LIGHT_RUNNING_MODE = 0x01;
 
+        static final int LIGHT_CONTROL_MODE_LIGHT_PWM_FREQUENCY = 0x0A;
+
+        static final int LIGHT_CONTROL_MODE_CHANNEL_MODE = 0x07;
+
+
+        static final int SR_IDENTIFIER_LIGHT_SWITCH_TYPE = 0x07;
+
+        static final int LIGHT_SWITCH_TYPE_NORMAL_ON_OFF = 0x01;
+
+        static final int LIGHT_SWITCH_TYPE_PUSH_BUTTON = 0x02;
+
+        static final int LIGHT_SWITCH_TYPE_THREE_CHANNELS = 0x03;
+
+
+        static final int SR_IDENTIFIER_SPECIAL = 0x12;
+
     }
 
     public static class LightRunningMode {
@@ -793,7 +905,7 @@ public class MeshCommand {
             this.customModeId = customModeId;
         }
 
-        static final class State {
+        public static final class State {
 
             static final int STOPPED = 0x00;
             static final int DEFAULT_MODE = 0x01;

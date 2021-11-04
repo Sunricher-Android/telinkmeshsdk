@@ -1154,6 +1154,17 @@ public final class MeshManager {
                 handleLightControlModeCommand(command);
                 break;
 
+            case MeshCommand.Const.SR_IDENTIFIER_LIGHT_SWITCH_TYPE:
+
+                Log.i(LOG_TAG, "lightSwitchType");
+                handleLightSwitchTypeCommand(command);
+                break;
+
+            case MeshCommand.Const.SR_IDENTIFIER_SPECIAL:
+
+                Log.i(LOG_TAG, "special feature command");
+                break;
+
             default:
                 Log.e(LOG_TAG, "unknown srIdentifier " + srIdentifier);
         }
@@ -1353,9 +1364,43 @@ public final class MeshManager {
 
                 break;
 
+            case MeshCommand.Const.LIGHT_CONTROL_MODE_LIGHT_PWM_FREQUENCY:
+
+                int frequency = (((int) command.getUserData()[4] & 0xFF) << 8) | ((int) command.getUserData()[3] & 0xFF);
+                Log.i(LOG_TAG, "lightPwmFrequency " + frequency);
+
+                if (frequency < 1) return;
+
+                if (deviceCallback == null) return;
+                deviceCallback.didGetLightPwmFrequency(this, command.getSrc(), frequency);
+                break;
+
+            case MeshCommand.Const.LIGHT_CONTROL_MODE_CHANNEL_MODE:
+
+                int first = (int) command.getUserData()[2] & 0xFF;
+                int second = (int) command.getUserData()[3] & 0xFF;
+                if (first != 0x04 || second != 0x00) return;
+
+                boolean isEnabled = ((int) command.getUserData()[4] & 0xFF) == 0x01;
+                Log.i(LOG_TAG, "channelMode: Rgb independence isEnabled " + isEnabled);
+
+                if (deviceCallback == null) return;
+                deviceCallback.didGetRgbIndependenceState(this, command.getSrc(), isEnabled);
+                break;
+
             default:
                 break;
         }
+    }
+
+    private void handleLightSwitchTypeCommand(MeshCommand command) {
+
+        int switchType = (int) command.getUserData()[2] & 0xFF;
+        if (switchType < 1 || switchType > 3) return;
+
+        Log.i(LOG_TAG, "LightSwitchType " + switchType);
+        if (deviceCallback == null) return;
+        deviceCallback.didGetLightSwitchType(this, command.getSrc(), switchType);
     }
 
     private void handleResponseGroupsValue(byte[] data) {

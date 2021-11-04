@@ -41,4 +41,13 @@ public abstract class DeviceCallback {
     public void didGetLightRunningModeId(MeshManager manager, int address, int modeId, int colorsCount, int colorIndex, MeshCommand.LightRunningMode.Color color) {
     }
 
+    public void didGetLightSwitchType(MeshManager manager, int address, int switchType) {
+    }
+
+    public void didGetLightPwmFrequency(MeshManager manager, int address, int frequency) {
+    }
+
+    public void didGetRgbIndependenceState(MeshManager manager, int address, boolean isEnabled) {
+    }
+
 }
