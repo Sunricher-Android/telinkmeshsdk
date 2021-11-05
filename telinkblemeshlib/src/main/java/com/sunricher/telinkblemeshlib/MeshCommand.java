@@ -379,6 +379,12 @@ public class MeshCommand {
         return cmd;
     }
 
+    /**
+     *
+     * @param address
+     * @param lightSwitchType 0x01 - Normal ON OFF, 0x02 - Push Button, 0x03 - Three Channels
+     * @return
+     */
     public static MeshCommand setLightSwitchType(int address, int lightSwitchType) {
 
         MeshCommand cmd = new MeshCommand();
@@ -907,9 +913,9 @@ public class MeshCommand {
 
         public static final class State {
 
-            static final int STOPPED = 0x00;
-            static final int DEFAULT_MODE = 0x01;
-            static final int CUSTOM_MODE = 0x02;
+            public static final int STOPPED = 0x00;
+            public static final int DEFAULT_MODE = 0x01;
+            public static final int CUSTOM_MODE = 0x02;
         }
 
         public static final class DefaultMode {
