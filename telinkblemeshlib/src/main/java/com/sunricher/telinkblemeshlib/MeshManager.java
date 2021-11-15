@@ -1089,6 +1089,24 @@ public final class MeshManager {
                 Log.i(LOG_TAG, "groupAction tag");
                 break;
 
+            case MeshCommand.Const.TAG_SCENE:
+                Log.i(LOG_TAG, "scene tag");
+                break;
+
+            case MeshCommand.Const.TAG_LOAD_SCENE:
+                Log.i(LOG_TAG, "loadScene tag");
+                break;
+
+            case MeshCommand.Const.TAG_GET_SCENE:
+                Log.i(LOG_TAG, "getScene tag");
+                break;
+
+            case MeshCommand.Const.TAG_GET_SCENE_RESPONSE:
+
+                Log.i(LOG_TAG, "getSceneResponse tag");
+                handleResponseSceneValue(data);
+                break;
+
             default:
                 Log.e(LOG_TAG, "handleNotifyValue unknown tag " + tagValue);
         }
@@ -1573,6 +1591,34 @@ public final class MeshManager {
         if (deviceCallback != null) {
             deviceCallback.didGetGroups(this, command.getSrc(), groups);
         }
+    }
+
+    private void handleResponseSceneValue(byte[] data) {
+
+        MeshCommand command = MeshCommand.makeWithNotifyData(data);
+        if (command == null) return;
+
+        int sceneID = command.getParam();
+        if (sceneID < 1 || sceneID > 16) return;
+
+        int brightness = (int) (command.getUserData()[0] & 0xFF);
+        int red = (int) (command.getUserData()[1] & 0xFF);
+        int green = (int) (command.getUserData()[2] & 0xFF);
+        int blue = (int) (command.getUserData()[3] & 0xFF);
+        int ctOrW = (int) (command.getUserData()[4] & 0xFF);
+        int duration = (int) (command.getUserData()[5] & 0xFF) | (((int) command.getUserData()[6] & 0xFF) << 8);
+
+        MeshCommand.Scene scene = new MeshCommand.Scene(sceneID);
+        scene.setBrightness(brightness);
+        scene.setRed(red);
+        scene.setGreen(green);
+        scene.setBlue(blue);
+        scene.setCtOrW(ctOrW);
+        scene.setDuration(duration);
+        Log.i(LOG_TAG, "getScene " + sceneID);
+
+        if (deviceCallback == null) return;
+        deviceCallback.didGetScene(this, command.getSrc(), scene);
     }
 
     private enum SetNetworkState {

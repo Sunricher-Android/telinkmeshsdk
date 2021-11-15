@@ -70,4 +70,7 @@ public abstract class DeviceCallback {
     public void didGetSunriseSunsetAction(MeshManager manager, int address, MeshCommand.SunriseSunsetAction action) {
     }
 
+    public void didGetScene(MeshManager manager, int address, MeshCommand.Scene scene) {
+    }
+
 }

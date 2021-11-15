@@ -758,9 +758,8 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
-     * @param type MeshCommand.SunriseSunsetType
+     * @param type    MeshCommand.SunriseSunsetType
      * @return
      */
     public static MeshCommand clearSunriseSunsetContent(int address, byte type) {
@@ -774,9 +773,8 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
-     * @param type MeshCommand.SunriseSunsetType
+     * @param type      MeshCommand.SunriseSunsetType
      * @param isEnabled
      * @return
      */
@@ -897,6 +895,14 @@ public class MeshCommand {
         static final int TAG_RESPONSE_GROUPS = 0xD4;
 
         static final int TAG_GROUP_ACTION = 0xD7;
+
+        static final int TAG_SCENE = 0xEE;
+
+        static final int TAG_LOAD_SCENE = 0xEF;
+
+        static final int TAG_GET_SCENE = 0xC0;
+
+        static final int TAG_GET_SCENE_RESPONSE = 0xC1;
 
 
         static final int SR_IDENTIFIER_MAC = 0x76;
@@ -1362,5 +1368,161 @@ public class MeshCommand {
                     + brightness + ", RGBW " + red + " " + green + " " + blue + " " + ctOrW
                     + ", duration " + duration;
         }
+    }
+
+    public static class Scene {
+
+        private int sceneID;
+
+        private int brightness = 100;
+
+        private int red = 255;
+
+        private int green = 255;
+
+        private int blue = 255;
+
+        private int ctOrW = 100;
+
+        private int duration = 0;
+
+        public Scene(int sceneID) {
+            super();
+            this.sceneID = sceneID;
+        }
+
+        public int getSceneID() {
+            return sceneID;
+        }
+
+        /**
+         *
+         * @param sceneID Range [1, 16]
+         */
+        public void setSceneID(int sceneID) {
+            this.sceneID = sceneID;
+        }
+
+        public int getBrightness() {
+            return brightness;
+        }
+
+        /**
+         *
+         * @param brightness Range [0, 100]
+         */
+        public void setBrightness(int brightness) {
+            this.brightness = brightness;
+        }
+
+        public int getRed() {
+            return red;
+        }
+
+        /**
+         *
+         * @param red Range [0, 255]
+         */
+        public void setRed(int red) {
+            this.red = red;
+        }
+
+        public int getGreen() {
+            return green;
+        }
+
+        /**
+         *
+         * @param green Range [0, 255]
+         */
+        public void setGreen(int green) {
+            this.green = green;
+        }
+
+        public int getBlue() {
+            return blue;
+        }
+
+        /**
+         *
+         * @param blue Range [0, 255]
+         */
+        public void setBlue(int blue) {
+            this.blue = blue;
+        }
+
+        public int getCtOrW() {
+            return ctOrW;
+        }
+
+        /**
+         *
+         * @param ctOrW CCT range [0, 100], white range [0, 255]
+         */
+        public void setCtOrW(int ctOrW) {
+            this.ctOrW = ctOrW;
+        }
+
+        public int getDuration() {
+            return duration;
+        }
+
+        /**
+         *
+         * @param duration Range [0, 65535]
+         */
+        public void setDuration(int duration) {
+            this.duration = duration;
+        }
+    }
+
+    public static MeshCommand addOrUpdateScene(int address, Scene scene) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_SCENE;
+        cmd.dst = address;
+        cmd.param = 0x01; // add
+        cmd.userData[0] = (byte) (scene.sceneID & 0xFF);
+        cmd.userData[1] = (byte) (scene.brightness & 0xFF);
+        cmd.userData[2] = (byte) (scene.red & 0xFF);
+        cmd.userData[3] = (byte) (scene.green & 0xFF);
+        cmd.userData[4] = (byte) (scene.blue & 0xFF);
+        cmd.userData[5] = (byte) (scene.ctOrW & 0xFF);
+        cmd.userData[6] = (byte) (scene.duration & 0xFF);
+        cmd.userData[7] = (byte) ((scene.duration >> 8) & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand deleteScene(int address, int sceneID) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_SCENE;
+        cmd.dst = address;
+        cmd.param = 0x00; // delete
+        cmd.userData[0] = (byte) (sceneID & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand clearScenes(int address) {
+
+        return deleteScene(address, 0xFF);
+    }
+
+    public static MeshCommand loadScene(int address, int sceneID) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_LOAD_SCENE;
+        cmd.dst = address;
+        cmd.param = (byte) sceneID & 0xFF;
+        return cmd;
+    }
+
+    public static MeshCommand getSceneDetail(int address, int sceneID) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_GET_SCENE;
+        cmd.dst = address;
+        cmd.param = (byte) sceneID & 0xFF;
+        return cmd;
     }
 }
