@@ -50,4 +50,24 @@ public abstract class DeviceCallback {
     public void didGetRgbIndependenceState(MeshManager manager, int address, boolean isEnabled) {
     }
 
+    /**
+     * @param manager
+     * @param address
+     * @param isNegative    Timezone is negative?
+     * @param hour          Timezone hour
+     * @param minute        Timezone minute
+     * @param sunriseHour
+     * @param sunriseMinute
+     * @param sunsetHour
+     * @param sunsetMinute
+     */
+    public void didGetTimezone(MeshManager manager, int address, boolean isNegative, int hour, int minute, int sunriseHour, int sunriseMinute, int sunsetHour, int sunsetMinute) {
+    }
+
+    public void didGetLocation(MeshManager manager, int address, float longitude, float latitude) {
+    }
+
+    public void didGetSunriseSunsetAction(MeshManager manager, int address, MeshCommand.SunriseSunsetAction action) {
+    }
+
 }

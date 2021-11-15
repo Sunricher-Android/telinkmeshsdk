@@ -1165,6 +1165,35 @@ public final class MeshManager {
                 Log.i(LOG_TAG, "special feature command");
                 break;
 
+            case MeshCommand.Const.SR_IDENTIFIER_TIMEZONE:
+
+                Log.i(LOG_TAG, "timezone");
+                handleTimezoneCommand(command);
+                break;
+
+            case MeshCommand.Const.SR_IDENTIFIER_GET_LOCATION:
+
+                Log.i(LOG_TAG, "getLocation");
+                handleLocationCommand(command);
+                break;
+
+            case MeshCommand.Const.SR_IDENTIFIER_SET_LOCATION:
+
+                Log.i(LOG_TAG, "setLocation");
+                break;
+
+            case MeshCommand.Const.SR_IDENTIFIER_SUNRISE:
+
+                Log.i(LOG_TAG, "sunrise");
+                handleSunriseSunsetCommand(command, MeshCommand.SunriseSunsetType.SUNRISE);
+                break;
+
+            case MeshCommand.Const.SR_IDENTIFIER_SUNSET:
+
+                Log.i(LOG_TAG, "sunset");
+                handleSunriseSunsetCommand(command, MeshCommand.SunriseSunsetType.SUNSET);
+                break;
+
             default:
                 Log.e(LOG_TAG, "unknown srIdentifier " + srIdentifier);
         }
@@ -1401,6 +1430,122 @@ public final class MeshManager {
         Log.i(LOG_TAG, "LightSwitchType " + switchType);
         if (deviceCallback == null) return;
         deviceCallback.didGetLightSwitchType(this, command.getSrc(), switchType);
+    }
+
+    private void handleTimezoneCommand(MeshCommand command) {
+
+        if (command.getUserData()[2] == 0
+                && command.getUserData()[3] == 0
+                && command.getUserData()[4] == 0
+                && command.getUserData()[5] == 0
+                && command.getUserData()[6] == 0
+                && command.getUserData()[7] == 0
+                && command.getUserData()[8] == 0) {
+            return;
+        }
+
+        int hour = ((int) command.getUserData()[2] & 0xFF) & 0x7F;
+        boolean isNegative = (((int) command.getUserData()[2] & 0xFF) & 0x80) == 0x80;
+        int minute = (int) (command.getUserData()[3] & 0xFF);
+        int sunriseHour = (int) (command.getUserData()[5] & 0xFF);
+        int sunriseMinute = (int) (command.getUserData()[6] & 0xFF);
+        int sunsetHour = (int) (command.getUserData()[7] & 0xFF);
+        int sunsetMinute = (int) (command.getUserData()[8] & 0xFF);
+
+        String sign = isNegative ? "-" : "";
+        Log.i(LOG_TAG, "handleTimezoneCommand " + command.getSrc() + ", " + sign + ""
+                + hour + ":" + minute + ", " + sunriseHour + ":" + sunriseMinute + ", "
+                + sunsetHour + ":" + sunsetMinute);
+
+        if (deviceCallback == null) return;
+        deviceCallback.didGetTimezone(this, command.getSrc(), isNegative, hour, minute,
+                sunriseHour, sunriseMinute, sunsetHour, sunsetMinute);
+    }
+
+    private void handleLocationCommand(MeshCommand command) {
+
+        if ((command.getUserData()[1] == 0
+                && command.getUserData()[2] == 0
+                && command.getUserData()[3] == 0
+                && command.getUserData()[4] == 0)
+                || (command.getUserData()[5] == 0
+                && command.getUserData()[6] == 0
+                && command.getUserData()[7] == 0
+                && command.getUserData()[8] == 0)) {
+            return;
+        }
+
+        byte[] longitudeData = new byte[]{
+                command.getUserData()[1],
+                command.getUserData()[2],
+                command.getUserData()[3],
+                command.getUserData()[4]};
+        byte[] latitudeData = new byte[]{
+                command.getUserData()[5],
+                command.getUserData()[6],
+                command.getUserData()[7],
+                command.getUserData()[8]
+        };
+        float longitude = com.sunricher.telinkblemeshlib.util.HexUtil.getFloat(longitudeData);
+        float latitude = com.sunricher.telinkblemeshlib.util.HexUtil.getFloat(latitudeData);
+
+        Log.i(LOG_TAG, "handleLocationCommand " + longitude + ", " + latitude);
+
+        if (deviceCallback == null) return;
+        deviceCallback.didGetLocation(this, command.getSrc(), longitude, latitude);
+    }
+
+    private void handleSunriseSunsetCommand(MeshCommand command, byte type) {
+
+        byte actionType = (byte) ((int) command.getUserData()[1] & 0x7F);
+        boolean isEnabled = (((int) command.getUserData()[1] & 0xFF) & 0x80) == 0;
+        MeshCommand.SunriseSunsetAction action = null;
+
+        switch (actionType) {
+
+            case MeshCommand.SunriseSunsetActionType.ON_OFF:
+
+                MeshCommand.SunriseSunsetOnOffAction onOffAction = new MeshCommand.SunriseSunsetOnOffAction(type);
+                onOffAction.setEnabled(isEnabled);
+                onOffAction.setOn(((int) command.getUserData()[2] & 0xFF) == 0x01);
+                int duration = ((int) command.getUserData()[6] & 0xFF) | (((int) command.getUserData()[7] & 0xFF) << 8);
+                onOffAction.setDuration(duration);
+
+                action = onOffAction;
+                break;
+
+            case MeshCommand.SunriseSunsetActionType.SCENE:
+
+                MeshCommand.SunriseSunsetSceneAction sceneAction = new MeshCommand.SunriseSunsetSceneAction(type);
+                sceneAction.setEnabled(isEnabled);
+                sceneAction.setSceneID((int) command.getUserData()[2] & 0xFF);
+
+                action = sceneAction;
+                break;
+
+            case MeshCommand.SunriseSunsetActionType.CUSTOM:
+
+                MeshCommand.SunriseSunsetCustomAction customAction = new MeshCommand.SunriseSunsetCustomAction(type);
+                customAction.setEnabled(isEnabled);
+                customAction.setBrightness((int) command.getUserData()[2]);
+                customAction.setRed((int) command.getUserData()[3]);
+                customAction.setGreen((int) command.getUserData()[4]);
+                customAction.setBlue((int) command.getUserData()[5]);
+                customAction.setCtOrW((int) command.getUserData()[6]);
+                int customDuration = ((int) command.getUserData()[7] & 0xFF) | (((int) command.getUserData()[8] & 0xFF) << 8);
+                customAction.setDuration(customDuration);
+
+                action = customAction;
+                break;
+
+            default:
+                break;
+        }
+
+        Log.i(LOG_TAG, "SunriseSunsetAction " + action.getDescription());
+
+        if (deviceCallback == null) return;
+        deviceCallback.didGetSunriseSunsetAction(this, command.getSrc(), action);
     }
 
     private void handleResponseGroupsValue(byte[] data) {

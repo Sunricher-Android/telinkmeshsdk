@@ -47,4 +47,38 @@ public class HexUtil {
         return (byte) "0123456789ABCDEF".indexOf(c);
     }
 
+    /**
+     * 将 float 转成 bytes
+     *
+     * @param data
+     * @return
+     */
+    public static byte[] getBytes(float data) {
+        int intBits = Float.floatToIntBits(data);
+        return getBytes(intBits);
+    }
+
+    public static byte[] getBytes(int data) {
+        byte[] bytes = new byte[4];
+        bytes[0] = (byte) (data & 0xff);
+        bytes[1] = (byte) ((data & 0xff00) >> 8);
+        bytes[2] = (byte) ((data & 0xff0000) >> 16);
+        bytes[3] = (byte) ((data & 0xff000000) >> 24);
+        return bytes;
+    }
+
+    public static int getInt(byte[] bytes) {
+        return (0xff & bytes[0]) | (0xff00 & (bytes[1] << 8)) | (0xff0000 & (bytes[2] << 16)) | (0xff000000 & (bytes[3] << 24));
+    }
+
+    /**
+     * 将 bytes 转成 float
+     *
+     * @param bytes
+     * @return
+     */
+    public static float getFloat(byte[] bytes) {
+        return Float.intBitsToFloat(getInt(bytes));
+    }
+
 }

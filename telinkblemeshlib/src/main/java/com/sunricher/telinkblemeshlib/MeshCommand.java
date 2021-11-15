@@ -1,5 +1,7 @@
 package com.sunricher.telinkblemeshlib;
 
+import com.sunricher.telinkblemeshlib.util.HexUtil;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
@@ -380,7 +382,6 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
      * @param lightSwitchType 0x01 - Normal ON OFF, 0x02 - Push Button, 0x03 - Three Channels
      * @return
@@ -407,7 +408,6 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
      * @param frequency Range `[500, 10_000]`, unit `Hz`.
      * @return
@@ -450,7 +450,6 @@ public class MeshCommand {
     }
 
     /**
-     *
      * @param address
      * @param isEnabled If `true`, the other channels will be closed when change the RGB,
      *                  the RGB will be closed when change the other channels.
@@ -645,6 +644,152 @@ public class MeshCommand {
         return cmd;
     }
 
+    public static MeshCommand setTimezone(int address, int hour, int minute, boolean isNegative) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) Const.SR_IDENTIFIER_TIMEZONE;
+        cmd.userData[1] = 0x01; // set
+        cmd.userData[2] = (byte) (Math.abs(hour) | (isNegative ? 0x80 : 0x00));
+        cmd.userData[3] = (byte) minute;
+        return cmd;
+    }
+
+    public static MeshCommand getTimezone(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) Const.SR_IDENTIFIER_TIMEZONE;
+        cmd.userData[1] = 0x00; // get
+        return cmd;
+    }
+
+    public static MeshCommand setLocation(int address, float longitude, float latitude) {
+
+        byte[] longitudeData = HexUtil.getBytes(longitude);
+        byte[] latitudeData = HexUtil.getBytes(latitude);
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) Const.SR_IDENTIFIER_SET_LOCATION;
+        cmd.userData[1] = longitudeData[0];
+        cmd.userData[2] = longitudeData[1];
+        cmd.userData[3] = longitudeData[2];
+        cmd.userData[4] = longitudeData[3];
+        cmd.userData[5] = latitudeData[0];
+        cmd.userData[6] = latitudeData[1];
+        cmd.userData[7] = latitudeData[2];
+        cmd.userData[8] = latitudeData[3];
+        return cmd;
+    }
+
+    public static MeshCommand getLocation(int address) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) Const.SR_IDENTIFIER_GET_LOCATION;
+        return cmd;
+    }
+
+    /**
+     * @param address
+     * @param type    MeshCommand.SunriseSunsetType
+     * @return
+     */
+    public static MeshCommand getSunriseSunset(int address, byte type) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = type;
+        return cmd;
+    }
+
+    public static MeshCommand setSunriseSunsetAction(int address, SunriseSunsetAction action) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = action.getType();
+        int actionType = (int) (action.getActionType() & 0xFF);
+        cmd.userData[1] = (byte) (actionType | (action.isEnabled ? 0x00 : 0x80));
+
+        switch (action.getActionType()) {
+
+            case SunriseSunsetActionType.ON_OFF:
+
+                SunriseSunsetOnOffAction onOffAction = (SunriseSunsetOnOffAction) action;
+                cmd.userData[2] = (byte) (onOffAction.isOn ? 0x01 : 0x00);
+                cmd.userData[3] = 0x00;
+                cmd.userData[4] = 0x00;
+                cmd.userData[5] = 0x00;
+                cmd.userData[6] = (byte) (onOffAction.duration & 0xFF);
+                cmd.userData[7] = (byte) ((onOffAction.duration >> 8) & 0xFF);
+                cmd.userData[8] = 0x00; // light endpoint bit, un-support now
+                break;
+
+            case SunriseSunsetActionType.SCENE:
+
+                SunriseSunsetSceneAction sceneAction = (SunriseSunsetSceneAction) action;
+                cmd.userData[2] = (byte) (sceneAction.sceneID & 0xFF);
+                break;
+
+            case SunriseSunsetActionType.CUSTOM:
+
+                SunriseSunsetCustomAction customAction = (SunriseSunsetCustomAction) action;
+                cmd.userData[2] = (byte) (customAction.brightness & 0xFF);
+                cmd.userData[3] = (byte) (customAction.red & 0xFF);
+                cmd.userData[4] = (byte) (customAction.green & 0xFF);
+                cmd.userData[5] = (byte) (customAction.blue & 0xFF);
+                cmd.userData[6] = (byte) (customAction.ctOrW & 0xFF);
+                cmd.userData[7] = (byte) (customAction.duration & 0xFF);
+                cmd.userData[8] = (byte) ((customAction.duration >> 8) & 0xFF);
+                break;
+
+            default:
+                break;
+        }
+
+        return cmd;
+    }
+
+    /**
+     *
+     * @param address
+     * @param type MeshCommand.SunriseSunsetType
+     * @return
+     */
+    public static MeshCommand clearSunriseSunsetContent(int address, byte type) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = type;
+        cmd.userData[1] = (byte) 0xC0; // clear
+        return cmd;
+    }
+
+    /**
+     *
+     * @param address
+     * @param type MeshCommand.SunriseSunsetType
+     * @param isEnabled
+     * @return
+     */
+    public static MeshCommand enableSunriseSunset(int address, byte type, boolean isEnabled) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = type;
+        cmd.userData[1] = (byte) (isEnabled ? 0xE0 : 0xF0); // enable 0xE0, disable 0xF0
+        return cmd;
+    }
+
     private int increaseSeqNo() {
 
         seqNo += 1;
@@ -796,6 +941,13 @@ public class MeshCommand {
 
         static final int SR_IDENTIFIER_SPECIAL = 0x12;
 
+        static final int SR_IDENTIFIER_TIMEZONE = 0x1E;
+
+        static final int SR_IDENTIFIER_SET_LOCATION = 0x1A;
+        static final int SR_IDENTIFIER_GET_LOCATION = 0x1B;
+
+        static final int SR_IDENTIFIER_SUNRISE = 0x1C;
+        static final int SR_IDENTIFIER_SUNSET = 0x1D;
     }
 
     public static class LightRunningMode {
@@ -987,4 +1139,228 @@ public class MeshCommand {
         }
     }
 
+    /**
+     * Sunrise Sunset
+     */
+
+    public static class SunriseSunsetType {
+
+        public static final byte SUNRISE = (byte) 0x1C;
+        public static final byte SUNSET = (byte) 0x1D;
+    }
+
+    public static class SunriseSunsetActionType {
+
+        public static final byte ON_OFF = (byte) 0x01;
+        public static final byte SCENE = (byte) 0x02;
+        public static final byte CUSTOM = (byte) 0x04;
+    }
+
+    public static abstract class SunriseSunsetAction {
+
+        private byte type = SunriseSunsetType.SUNRISE;
+        private boolean isEnabled = true;
+
+        /**
+         * @return MeshCommand.SunriseSunsetType
+         */
+        public byte getType() {
+            return type;
+        }
+
+        /**
+         * @param type MeshCommand.SunriseSunsetType
+         */
+        public void setType(byte type) {
+            this.type = type;
+        }
+
+        /**
+         * @return MeshCommand.SunriseSunsetActionType
+         */
+        public abstract byte getActionType();
+
+        public boolean isEnabled() {
+            return isEnabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            isEnabled = enabled;
+        }
+
+        public abstract String getDescription();
+    }
+
+    public static class SunriseSunsetOnOffAction extends SunriseSunsetAction {
+
+        private boolean isOn = true;
+        private int duration = 0;
+
+        /**
+         * @param type MeshCommand.SunriseSunsetType
+         */
+        public SunriseSunsetOnOffAction(byte type) {
+            super();
+            this.setType(type);
+        }
+
+        @Override
+        public byte getActionType() {
+            return SunriseSunsetActionType.ON_OFF;
+        }
+
+        @Override
+        public String getDescription() {
+            return "OnOffAction " + getType() + ", isEnabled " + isEnabled() + ", " + isOn + ", duration " + duration;
+        }
+
+        public boolean isOn() {
+            return isOn;
+        }
+
+        public void setOn(boolean on) {
+            isOn = on;
+        }
+
+        public int getDuration() {
+            return duration;
+        }
+
+        public void setDuration(int duration) {
+            this.duration = duration;
+        }
+    }
+
+    public static class SunriseSunsetSceneAction extends SunriseSunsetAction {
+
+        /**
+         * Range [1, 16], default 1
+         */
+        private int sceneID = 1;
+
+        /**
+         * @param type MeshCommand.SunriseSunsetType
+         */
+        public SunriseSunsetSceneAction(byte type) {
+            super();
+            this.setType(type);
+        }
+
+        @Override
+        public byte getActionType() {
+            return SunriseSunsetActionType.SCENE;
+        }
+
+        public int getSceneID() {
+            return sceneID;
+        }
+
+        /**
+         * @param sceneID Range [1, 16], default 1
+         */
+        public void setSceneID(int sceneID) {
+            this.sceneID = sceneID;
+        }
+
+        @Override
+        public String getDescription() {
+            return "SceneAction " + getType() + ", isEnabled " + isEnabled() + ", sceneID " + sceneID;
+        }
+    }
+
+    public static class SunriseSunsetCustomAction extends SunriseSunsetAction {
+
+        /**
+         * Range [0, 100], default 100
+         */
+        private int brightness = 100;
+        /**
+         * Range [0, 255], default 255
+         */
+        private int red = 255;
+        /**
+         * Range [0, 255], default 255
+         */
+        private int green = 255;
+        /**
+         * Range [0, 255], default 255
+         */
+        private int blue = 255;
+        /**
+         * CT range [0, 100], white range [0, 255], default 100
+         */
+        private int ctOrW = 255;
+        /**
+         * Range [0, 0xFFFF], default 0
+         */
+        private int duration = 0;
+
+        /**
+         * @param type MeshCommand.SunriseSunsetType
+         */
+        public SunriseSunsetCustomAction(byte type) {
+            super();
+            this.setType(type);
+        }
+
+        @Override
+        public byte getActionType() {
+            return SunriseSunsetActionType.CUSTOM;
+        }
+
+        public int getBrightness() {
+            return brightness;
+        }
+
+        public void setBrightness(int brightness) {
+            this.brightness = brightness;
+        }
+
+        public int getRed() {
+            return red;
+        }
+
+        public void setRed(int red) {
+            this.red = red;
+        }
+
+        public int getGreen() {
+            return green;
+        }
+
+        public void setGreen(int green) {
+            this.green = green;
+        }
+
+        public int getBlue() {
+            return blue;
+        }
+
+        public void setBlue(int blue) {
+            this.blue = blue;
+        }
+
+        public int getCtOrW() {
+            return ctOrW;
+        }
+
+        public void setCtOrW(int ctOrW) {
+            this.ctOrW = ctOrW;
+        }
+
+        public int getDuration() {
+            return duration;
+        }
+
+        public void setDuration(int duration) {
+            this.duration = duration;
+        }
+
+        @Override
+        public String getDescription() {
+            return "CustomAction " + getType() + ", isEnabled " + isEnabled() + ", Brightness"
+                    + brightness + ", RGBW " + red + " " + green + " " + blue + " " + ctOrW
+                    + ", duration " + duration;
+        }
+    }
 }
