@@ -1573,7 +1573,7 @@ public final class MeshManager {
                 break;
 
             default:
-                break;
+                return;
         }
 
         Log.i(LOG_TAG, "SunriseSunsetAction " + action.getDescription());
