@@ -788,6 +788,214 @@ public class MeshCommand {
         return cmd;
     }
 
+    public static MeshCommand addOrUpdateScene(int address, Scene scene) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_SCENE;
+        cmd.dst = address;
+        cmd.param = 0x01; // add
+        cmd.userData[0] = (byte) (scene.sceneID & 0xFF);
+        cmd.userData[1] = (byte) (scene.brightness & 0xFF);
+        cmd.userData[2] = (byte) (scene.red & 0xFF);
+        cmd.userData[3] = (byte) (scene.green & 0xFF);
+        cmd.userData[4] = (byte) (scene.blue & 0xFF);
+        cmd.userData[5] = (byte) (scene.ctOrW & 0xFF);
+        cmd.userData[6] = (byte) (scene.duration & 0xFF);
+        cmd.userData[7] = (byte) ((scene.duration >> 8) & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand deleteScene(int address, int sceneID) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_SCENE;
+        cmd.dst = address;
+        cmd.param = 0x00; // delete
+        cmd.userData[0] = (byte) (sceneID & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand clearScenes(int address) {
+
+        return deleteScene(address, 0xFF);
+    }
+
+    public static MeshCommand loadScene(int address, int sceneID) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_LOAD_SCENE;
+        cmd.dst = address;
+        cmd.param = (byte) sceneID & 0xFF;
+        return cmd;
+    }
+
+    public static MeshCommand getSceneDetail(int address, int sceneID) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_GET_SCENE;
+        cmd.dst = address;
+        cmd.param = (byte) sceneID & 0xFF;
+        return cmd;
+    }
+
+    public static AbstractAlarm makeAlarm(MeshCommand command) {
+
+        // 0xA5 is valid alarm
+        if (command.getParam() != 0xA5) return null;
+        int alarmID = (int) command.userData[0] & 0xFF;
+        if (alarmID < 1 || alarmID > 16) return null;
+
+        int event = (int) (command.userData[1] & 0xFF);
+        // bit0~bit3, 0 off, 1 on, 2 scene
+        int actionType = event & 0b1111;
+        int dayType = (event & 0b0111_0000) >> 4;
+
+        boolean isEnabled = (event & 0x80) == 0x80;
+        int hour = (int) (command.userData[4] & 0xFF);
+        int minute = (int) (command.userData[5] & 0xFF);
+        int second = (int) (command.userData[6] & 0xFF);
+        int sceneID = (int) (command.userData[7] & 0xFF);
+
+        if (dayType == AlarmDayType.DAY) {
+
+            int month = (int) (command.userData[2] & 0xFF);
+            if (month < 1 || month > 12) return null;
+
+            int day = (int) (command.userData[3] & 0xFF);
+
+            DayAlarm dayAlarm = new DayAlarm(alarmID);
+            dayAlarm.setActionType(actionType);
+            dayAlarm.setEnabled(isEnabled);
+            dayAlarm.setHour(hour);
+            dayAlarm.setMinute(minute);
+            dayAlarm.setSecond(second);
+            dayAlarm.setSceneID(sceneID);
+            dayAlarm.setMonth(month);
+            dayAlarm.setDay(day);
+
+            return dayAlarm;
+
+        } else if (dayType == AlarmDayType.WEEK) {
+
+            int week = (int) (command.userData[3] & 0xFF) & 0x7F;
+
+            WeekAlarm weekAlarm = new WeekAlarm(alarmID);
+            weekAlarm.setActionType(actionType);
+            weekAlarm.setEnabled(isEnabled);
+            weekAlarm.setHour(hour);
+            weekAlarm.setMinute(minute);
+            weekAlarm.setSecond(second);
+            weekAlarm.setSceneID(sceneID);
+            weekAlarm.setWeek(week);
+
+            return weekAlarm;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param address
+     * @param alarmID The `alarmID = 0` means get all alarms of the device.
+     * @return
+     */
+    public static MeshCommand getAlarm(int address, int alarmID) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_GET_ALARM;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) alarmID;
+        return cmd;
+    }
+
+    /**
+     * Note: `alarm.alarmID` will be set to `0x00`, the device will automatically set the new `alarmID`.
+     *
+     * @param address
+     * @param alarm
+     * @return
+     */
+    public static MeshCommand addAlarm(int address, AbstractAlarm alarm) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_EDIT_ALARM;
+        cmd.dst = address;
+        cmd.param = 0x00; // add
+        cmd.userData[0] = 0x00; // automatically set alarmID
+        cmd.userData[1] = (byte) alarm.getAlarmEvent();
+
+        // 2 day.month
+        // 3 day.day, week.week
+        if (alarm.getDayType() == AlarmDayType.DAY) {
+
+            DayAlarm dayAlarm = (DayAlarm) alarm;
+            cmd.userData[2] = (byte) (dayAlarm.month);
+            cmd.userData[3] = (byte) (dayAlarm.day);
+
+        } else if (alarm.getDayType() == AlarmDayType.WEEK) {
+
+            WeekAlarm weekAlarm = (WeekAlarm) alarm;
+            cmd.userData[3] = (byte) (weekAlarm.week & 0x7F);
+        }
+
+        cmd.userData[4] = (byte) (alarm.hour);
+        cmd.userData[5] = (byte) (alarm.minute);
+        cmd.userData[6] = (byte) (alarm.second);
+        cmd.userData[7] = (byte) (alarm.sceneID);
+        return cmd;
+    }
+
+    public static MeshCommand enableAlarm(int address, int alarmID, boolean isEnabled) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_EDIT_ALARM;
+        cmd.dst = address;
+        // enable 0x03, disable 0x04
+        cmd.param = isEnabled ? 0x03 : 0x04;
+        cmd.userData[0] = (byte) alarmID;
+        return cmd;
+    }
+
+    public static MeshCommand deleteAlarm(int address, int alarmID) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_EDIT_ALARM;
+        cmd.dst = address;
+        cmd.param = 0x01; // delete
+        cmd.userData[0] = (byte) alarmID;
+        return cmd;
+    }
+
+    public static MeshCommand updateAlarm(int address, AbstractAlarm alarm) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_EDIT_ALARM;
+        cmd.dst = address;
+        cmd.param = 0x02; // update
+        cmd.userData[0] = (byte) (alarm.alarmID);
+        cmd.userData[1] = (byte) (alarm.getAlarmEvent());
+
+        // 2 day.month
+        // 3 day.day, week.week
+        if (alarm.getDayType() == AlarmDayType.DAY) {
+
+            DayAlarm dayAlarm = (DayAlarm) alarm;
+            cmd.userData[2] = (byte) (dayAlarm.month);
+            cmd.userData[3] = (byte) (dayAlarm.day);
+
+        } else if (alarm.getDayType() == AlarmDayType.WEEK) {
+
+            WeekAlarm weekAlarm = (WeekAlarm) alarm;
+            cmd.userData[3] = (byte) (weekAlarm.week & 0x7F);
+        }
+
+        cmd.userData[4] = (byte) (alarm.hour);
+        cmd.userData[5] = (byte) (alarm.minute);
+        cmd.userData[6] = (byte) (alarm.second);
+        cmd.userData[7] = (byte) (alarm.sceneID);
+        return cmd;
+    }
+
     private int increaseSeqNo() {
 
         seqNo += 1;
@@ -903,6 +1111,12 @@ public class MeshCommand {
         static final int TAG_GET_SCENE = 0xC0;
 
         static final int TAG_GET_SCENE_RESPONSE = 0xC1;
+
+        static final int TAG_EDIT_ALARM = 0xE5;
+
+        static final int TAG_GET_ALARM = 0xE6;
+
+        static final int TAG_GET_ALARM_RESPONSE = 0xE7;
 
 
         static final int SR_IDENTIFIER_MAC = 0x76;
@@ -1396,7 +1610,6 @@ public class MeshCommand {
         }
 
         /**
-         *
          * @param sceneID Range [1, 16]
          */
         public void setSceneID(int sceneID) {
@@ -1408,7 +1621,6 @@ public class MeshCommand {
         }
 
         /**
-         *
          * @param brightness Range [0, 100]
          */
         public void setBrightness(int brightness) {
@@ -1420,7 +1632,6 @@ public class MeshCommand {
         }
 
         /**
-         *
          * @param red Range [0, 255]
          */
         public void setRed(int red) {
@@ -1432,7 +1643,6 @@ public class MeshCommand {
         }
 
         /**
-         *
          * @param green Range [0, 255]
          */
         public void setGreen(int green) {
@@ -1444,7 +1654,6 @@ public class MeshCommand {
         }
 
         /**
-         *
          * @param blue Range [0, 255]
          */
         public void setBlue(int blue) {
@@ -1456,7 +1665,6 @@ public class MeshCommand {
         }
 
         /**
-         *
          * @param ctOrW CCT range [0, 100], white range [0, 255]
          */
         public void setCtOrW(int ctOrW) {
@@ -1468,7 +1676,6 @@ public class MeshCommand {
         }
 
         /**
-         *
          * @param duration Range [0, 65535]
          */
         public void setDuration(int duration) {
@@ -1476,53 +1683,155 @@ public class MeshCommand {
         }
     }
 
-    public static MeshCommand addOrUpdateScene(int address, Scene scene) {
+    public static class AlarmActionType {
 
-        MeshCommand cmd = new MeshCommand();
-        cmd.tag = Const.TAG_SCENE;
-        cmd.dst = address;
-        cmd.param = 0x01; // add
-        cmd.userData[0] = (byte) (scene.sceneID & 0xFF);
-        cmd.userData[1] = (byte) (scene.brightness & 0xFF);
-        cmd.userData[2] = (byte) (scene.red & 0xFF);
-        cmd.userData[3] = (byte) (scene.green & 0xFF);
-        cmd.userData[4] = (byte) (scene.blue & 0xFF);
-        cmd.userData[5] = (byte) (scene.ctOrW & 0xFF);
-        cmd.userData[6] = (byte) (scene.duration & 0xFF);
-        cmd.userData[7] = (byte) ((scene.duration >> 8) & 0xFF);
-        return cmd;
+        public static final int OFF = 0x00;
+        public static final int ON = 0x01;
+        public static final int SCENE = 0x02;
     }
 
-    public static MeshCommand deleteScene(int address, int sceneID) {
+    public static class AlarmDayType {
 
-        MeshCommand cmd = new MeshCommand();
-        cmd.tag = Const.TAG_SCENE;
-        cmd.dst = address;
-        cmd.param = 0x00; // delete
-        cmd.userData[0] = (byte) (sceneID & 0xFF);
-        return cmd;
+        public static final int DAY = 0x00;
+        public static final int WEEK = 0x01;
     }
 
-    public static MeshCommand clearScenes(int address) {
+    public static abstract class AbstractAlarm {
 
-        return deleteScene(address, 0xFF);
+        private int alarmID = 0;
+
+        private int actionType = AlarmActionType.OFF;
+        private boolean isEnabled = true;
+        private int hour = 10;
+        private int minute = 10;
+        private int second = 0;
+        private int sceneID;
+
+        /**
+         * @return MeshCommand.AlarmDayType.DAY or WEEK
+         */
+        public abstract int getDayType();
+
+        public int getAlarmID() {
+            return alarmID;
+        }
+
+        public void setAlarmID(int alarmID) {
+            this.alarmID = alarmID;
+        }
+
+        public int getActionType() {
+            return actionType;
+        }
+
+        public void setActionType(int actionType) {
+            this.actionType = actionType;
+        }
+
+        public boolean isEnabled() {
+            return isEnabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            isEnabled = enabled;
+        }
+
+        public int getHour() {
+            return hour;
+        }
+
+        public void setHour(int hour) {
+            this.hour = hour;
+        }
+
+        public int getMinute() {
+            return minute;
+        }
+
+        public void setMinute(int minute) {
+            this.minute = minute;
+        }
+
+        public int getSecond() {
+            return second;
+        }
+
+        public void setSecond(int second) {
+            this.second = second;
+        }
+
+        public int getSceneID() {
+            return sceneID;
+        }
+
+        public void setSceneID(int sceneID) {
+            this.sceneID = sceneID;
+        }
+
+        public int getAlarmEvent() {
+
+            return actionType | (getDayType() << 4) | (isEnabled ? 0x80 : 0x00);
+        }
     }
 
-    public static MeshCommand loadScene(int address, int sceneID) {
+    public static class DayAlarm extends AbstractAlarm {
 
-        MeshCommand cmd = new MeshCommand();
-        cmd.tag = Const.TAG_LOAD_SCENE;
-        cmd.dst = address;
-        cmd.param = (byte) sceneID & 0xFF;
-        return cmd;
+        private int month = 1;
+        private int day = 1;
+
+        public DayAlarm(int alarmID) {
+            super();
+            this.setAlarmID(alarmID);
+        }
+
+        @Override
+        public int getDayType() {
+            return AlarmDayType.DAY;
+        }
+
+        public int getMonth() {
+            return month;
+        }
+
+        public void setMonth(int month) {
+            this.month = month;
+        }
+
+        public int getDay() {
+            return day;
+        }
+
+        public void setDay(int day) {
+            this.day = day;
+        }
     }
 
-    public static MeshCommand getSceneDetail(int address, int sceneID) {
+    public static class WeekAlarm extends AbstractAlarm {
 
-        MeshCommand cmd = new MeshCommand();
-        cmd.tag = Const.TAG_GET_SCENE;
-        cmd.dst = address;
-        cmd.param = (byte) sceneID & 0xFF;
-        return cmd;
+        private int week = 0;
+
+        public WeekAlarm(int alarmID) {
+            super();
+            this.setAlarmID(alarmID);
+        }
+
+        @Override
+        public int getDayType() {
+            return AlarmDayType.WEEK;
+        }
+
+        /**
+         * @return bit0 Sun, bit1 Mon, bit2 Tue, bit3 Wed, bit4 Thu, bit5 Fri, bit6 Sat, bit7 must be 0.
+         */
+        public int getWeek() {
+            return week;
+        }
+
+        /**
+         * @param week bit0 Sun, bit1 Mon, bit2 Tue, bit3 Wed, bit4 Thu, bit5 Fri, bit6 Sat, bit7 must be 0.
+         */
+        public void setWeek(int week) {
+            this.week = week;
+        }
     }
 }

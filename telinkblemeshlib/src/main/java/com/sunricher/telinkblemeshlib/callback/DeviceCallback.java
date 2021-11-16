@@ -73,4 +73,7 @@ public abstract class DeviceCallback {
     public void didGetScene(MeshManager manager, int address, MeshCommand.Scene scene) {
     }
 
+    public void didGetAlarm(MeshManager manager, int address, MeshCommand.AbstractAlarm alarm) {
+    }
+
 }

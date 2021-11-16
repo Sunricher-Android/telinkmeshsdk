@@ -1107,6 +1107,22 @@ public final class MeshManager {
                 handleResponseSceneValue(data);
                 break;
 
+            case MeshCommand.Const.TAG_GET_ALARM:
+
+                Log.i(LOG_TAG, "getAlarm tag");
+                break;
+
+            case MeshCommand.Const.TAG_GET_ALARM_RESPONSE:
+
+                Log.i(LOG_TAG, "getAlarmResponse tag");
+                handleAlarmResponse(data);
+                break;
+
+            case MeshCommand.Const.TAG_EDIT_ALARM:
+
+                Log.i(LOG_TAG, "editAlarm tag");
+                break;
+
             default:
                 Log.e(LOG_TAG, "handleNotifyValue unknown tag " + tagValue);
         }
@@ -1619,6 +1635,19 @@ public final class MeshManager {
 
         if (deviceCallback == null) return;
         deviceCallback.didGetScene(this, command.getSrc(), scene);
+    }
+
+    private void handleAlarmResponse(byte[] data) {
+
+        MeshCommand command = MeshCommand.makeWithNotifyData(data);
+        if (command == null) return;
+        MeshCommand.AbstractAlarm alarm = MeshCommand.makeAlarm(command);
+        if (alarm == null) return;
+
+        Log.i(LOG_TAG, "getAlarm " + command.getSrc() + ", alarmID " + alarm.getAlarmID());
+
+        if (deviceCallback == null) return;
+        deviceCallback.didGetAlarm(this, command.getSrc(), alarm);
     }
 
     private enum SetNetworkState {
