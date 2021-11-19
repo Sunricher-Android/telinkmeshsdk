@@ -1561,11 +1561,11 @@ public final class MeshManager {
 
                 MeshCommand.SunriseSunsetCustomAction customAction = new MeshCommand.SunriseSunsetCustomAction(type);
                 customAction.setEnabled(isEnabled);
-                customAction.setBrightness((int) command.getUserData()[2]);
-                customAction.setRed((int) command.getUserData()[3]);
-                customAction.setGreen((int) command.getUserData()[4]);
-                customAction.setBlue((int) command.getUserData()[5]);
-                customAction.setCtOrW((int) command.getUserData()[6]);
+                customAction.setBrightness((int) command.getUserData()[2] & 0xFF);
+                customAction.setRed((int) command.getUserData()[3] & 0xFF);
+                customAction.setGreen((int) command.getUserData()[4] & 0xFF);
+                customAction.setBlue((int) command.getUserData()[5] & 0xFF);
+                customAction.setCtOrW((int) command.getUserData()[6] & 0xFF);
                 int customDuration = ((int) command.getUserData()[7] & 0xFF) | (((int) command.getUserData()[8] & 0xFF) << 8);
                 customAction.setDuration(customDuration);
 
