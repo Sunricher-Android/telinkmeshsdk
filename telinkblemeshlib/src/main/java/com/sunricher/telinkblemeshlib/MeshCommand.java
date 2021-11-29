@@ -834,7 +834,7 @@ public class MeshCommand {
         MeshCommand cmd = new MeshCommand();
         cmd.tag = Const.TAG_GET_SCENE;
         cmd.dst = address;
-        cmd.param = (byte) sceneID & 0xFF;
+        cmd.userData[0] = (byte) (sceneID & 0xFF);
         return cmd;
     }
 
