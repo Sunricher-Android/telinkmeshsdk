@@ -79,7 +79,7 @@ public final class MeshManager {
     private BleWriteCallback commandWriteCallback;
     private byte[] sessionKey;
     private Random random = new SecureRandom();
-    private byte[] macBytes;
+    private byte[] macBytes = new byte[]{};
     private MeshCommandExecutor commandExecutor = new MeshCommandExecutor();
     private SampleCommandCenter sampleCommandCenter = new SampleCommandCenter();
     private Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -684,6 +684,10 @@ public final class MeshManager {
 
         byte[] ivm = new byte[8];
 
+        if (meshAddress == null) {
+            return ivm;
+        }
+
         System.arraycopy(meshAddress, 0, ivm, 0, meshAddress.length);
 
         ivm[4] = 0x01;
@@ -697,6 +701,10 @@ public final class MeshManager {
     private byte[] getSecIVS(byte[] macAddress) {
 
         byte[] ivs = new byte[8];
+
+        if (macAddress == null) {
+            return ivs;
+        }
 
         ivs[0] = macAddress[0];
         ivs[1] = macAddress[1];
