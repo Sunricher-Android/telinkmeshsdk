@@ -210,6 +210,10 @@ public class MeshCommand {
         return cmd;
     }
 
+    public static MeshCommand turnOnOff(int address, Boolean isOn) {
+        return MeshCommand.turnOnOff(address, isOn, 0);
+    }
+
     /**
      * @param address
      * @param brightness Range [0, 100].

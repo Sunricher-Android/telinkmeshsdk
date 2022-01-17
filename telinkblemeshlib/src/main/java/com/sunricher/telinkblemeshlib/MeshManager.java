@@ -181,6 +181,8 @@ public final class MeshManager {
 
     public void connect(MeshNode node) {
 
+        MeshEntertainmentManager.getInstance().stop();
+
         this.updateSendingTimeInterval(node);
         this.sampleCommandCenter.clear();
 
@@ -204,6 +206,8 @@ public final class MeshManager {
     }
 
     public void disconnect(Boolean autoLogin) {
+
+        MeshEntertainmentManager.getInstance().stop();
 
         this.sampleCommandCenter.clear();
 
@@ -890,6 +894,8 @@ public final class MeshManager {
             public void onConnectSuccess(BleDevice bleDevice, BluetoothGatt gatt, int status) {
                 Log.i(LOG_TAG, "onConnectSuccess, status " + status);
 
+                MeshEntertainmentManager.getInstance().stop();
+
                 MeshNode node = MeshManager.this.connectNode;
 
                 MeshManager.this.stopScanNode();
@@ -922,6 +928,8 @@ public final class MeshManager {
             @Override
             public void onDisConnected(boolean isActiveDisConnected, BleDevice device, BluetoothGatt gatt, int status) {
                 Log.i(LOG_TAG, "onDisConnected isActive " + isActiveDisConnected + ", status " + status + ", isAutoLogin " + MeshManager.this.isAutoLogin);
+
+                MeshEntertainmentManager.getInstance().stop();
 
                 MeshNode node = MeshManager.this.connectNode;
                 MeshManager.this.connectNode = null;

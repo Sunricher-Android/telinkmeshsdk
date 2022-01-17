@@ -15,6 +15,8 @@ import com.sunricher.telinkblemesh.model.MyDevice;
 import com.sunricher.telinkblemeshlib.MeshCommand;
 import com.sunricher.telinkblemeshlib.MeshDevice;
 import com.sunricher.telinkblemeshlib.MeshDeviceType;
+import com.sunricher.telinkblemeshlib.MeshEntertainmentAction;
+import com.sunricher.telinkblemeshlib.MeshEntertainmentManager;
 import com.sunricher.telinkblemeshlib.MeshManager;
 import com.sunricher.telinkblemeshlib.MqttMessage;
 import com.sunricher.telinkblemeshlib.callback.DeviceCallback;
@@ -50,6 +52,8 @@ public class DeviceActivity extends AppCompatActivity {
         setDeviceGroupsButton();
         setAddGroupButton();
         setDeleteGroupButton();
+        setStartEntButton();
+        setStopEntButton();
 
         MeshManager.getInstance().setDeviceCallback(new DeviceCallback() {
             @Override
@@ -195,6 +199,55 @@ public class DeviceActivity extends AppCompatActivity {
                 MeshCommand cmd = MeshCommand.setBrightness(device.getMeshDevice().getAddress(), seekBar.getProgress());
 //                MeshManager.getInstance().send(cmd);
                 MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"), false);
+            }
+        });
+    }
+
+    private void setStartEntButton() {
+
+        Button btn = findViewById(R.id.btn_start_ent);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                ArrayList<MeshEntertainmentAction> actions = new ArrayList<>();
+
+                int target = 0x35;
+                MeshEntertainmentAction red = new MeshEntertainmentAction(target);
+                red.setRgb(0xFF0000);
+                MeshEntertainmentAction green = new MeshEntertainmentAction(target);
+                green.setRgb(0x00FF00);
+                MeshEntertainmentAction blue = new MeshEntertainmentAction(target);
+                blue.setRgb(0x0000FF);
+                MeshEntertainmentAction cct0 = new MeshEntertainmentAction(target);
+                cct0.setColorTemperature(0);
+                MeshEntertainmentAction cct100 = new MeshEntertainmentAction(target);
+                cct100.setColorTemperature(100);
+                MeshEntertainmentAction off = new MeshEntertainmentAction(target);
+                off.setOn(false);
+                MeshEntertainmentAction emptyDelay = new MeshEntertainmentAction(target);
+                emptyDelay.setDelay(2);
+
+                actions.add(red);
+                actions.add(green);
+                actions.add(blue);
+                actions.add(cct0);
+                actions.add(cct100);
+                actions.add(off);
+                actions.add(emptyDelay);
+
+                MeshEntertainmentManager.getInstance().start(actions);
+            }
+        });
+    }
+
+    private void setStopEntButton() {
+
+        Button btn = findViewById(R.id.btn_stop_ent);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MeshEntertainmentManager.getInstance().stop();
             }
         });
     }
