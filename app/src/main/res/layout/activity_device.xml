@@ -102,4 +102,22 @@
         android:text="Stop Ent..."
         app:layout_constraintStart_toEndOf="@+id/btn_start_ent"
         app:layout_constraintTop_toTopOf="@+id/btn_start_ent" />
+
+    <Button
+        android:id="@+id/smart_switch_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Smart Switch"
+        app:layout_constraintStart_toStartOf="@+id/btn_start_ent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_start_ent" />
+
+    <Button
+        android:id="@+id/get_smart_switch_id_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Get Smart Switch ID"
+        app:layout_constraintStart_toStartOf="@+id/smart_switch_btn"
+        app:layout_constraintTop_toBottomOf="@+id/smart_switch_btn" />
 </androidx.constraintlayout.widget.ConstraintLayout>

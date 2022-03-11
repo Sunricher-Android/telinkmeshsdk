@@ -1000,6 +1000,98 @@ public class MeshCommand {
         return cmd;
     }
 
+    public static MeshCommand getSmartSwitchSecretKey(int mode, int groupId) {
+
+        long switchId = getSmartSwitchIdWithGroupId(groupId);
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = Address.connectNode;
+        cmd.userData[0] = (byte) 0x38;
+        cmd.userData[1] = (byte) 0x01; // start
+        cmd.userData[2] = (byte) (mode);
+        cmd.userData[3] = (byte) (switchId & 0xFF);
+        cmd.userData[4] = (byte) ((switchId >> 8) & 0xFF);
+        cmd.userData[5] = (byte) ((switchId >> 16) & 0xFF);
+        cmd.userData[6] = (byte) ((switchId >> 24) & 0xFF);
+        return cmd;
+    }
+
+    /**
+     *
+     * @param address Device address
+     * @param index Switch index, range [0, 7]
+     * @return
+     */
+    public static MeshCommand getSmartSwitchId(int address, int index) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) 0x72;
+        cmd.userData[1] = (byte) (index);
+        return cmd;
+    }
+
+    public static MeshCommand addSmartSwitchIdWithGroupId(int address, int groupId) {
+
+        long switchId = getSmartSwitchIdWithGroupId(groupId);
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) 0x12;
+        cmd.userData[1] = (byte) 0x03;
+        cmd.userData[2] = (byte) 0x01;
+        cmd.userData[3] = (byte) 0x01;
+        cmd.userData[4] = (byte) ((switchId >> 24) & 0xFF);
+        cmd.userData[5] = (byte) ((switchId >> 16) & 0xFF);
+        cmd.userData[6] = (byte) ((switchId >> 8) & 0xFF);
+        cmd.userData[7] = (byte) ((switchId) & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand deleteSmartSwitchIdWithGroupId(int address, int groupId) {
+
+        long switchId = getSmartSwitchIdWithGroupId(groupId);
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) 0x12;
+        cmd.userData[1] = (byte) 0x03;
+        cmd.userData[2] = (byte) 0x02;
+        cmd.userData[3] = (byte) 0x01;
+        cmd.userData[4] = (byte) ((switchId >> 24) & 0xFF);
+        cmd.userData[5] = (byte) ((switchId >> 16) & 0xFF);
+        cmd.userData[6] = (byte) ((switchId >> 8) & 0xFF);
+        cmd.userData[7] = (byte) ((switchId) & 0xFF);
+        return cmd;
+    }
+
+    public static MeshCommand deleteSmartSwitchId(int address, int switchId) {
+
+        MeshCommand cmd = new MeshCommand();
+        cmd.tag = Const.TAG_APP_TO_NODE;
+        cmd.dst = address;
+        cmd.userData[0] = (byte) 0x12;
+        cmd.userData[1] = (byte) 0x03;
+        cmd.userData[2] = (byte) 0x02;
+        cmd.userData[3] = (byte) 0x01;
+        cmd.userData[4] = (byte) ((switchId >> 24) & 0xFF);
+        cmd.userData[5] = (byte) ((switchId >> 16) & 0xFF);
+        cmd.userData[6] = (byte) ((switchId >> 8) & 0xFF);
+        cmd.userData[7] = (byte) ((switchId) & 0xFF);
+        return cmd;
+    }
+
+    private static long getSmartSwitchIdWithGroupId(int groupId) {
+
+        long value = (long) groupId << 16;
+        long trailing = 0x0001;
+        return value | trailing;
+    }
+
     private int increaseSeqNo() {
 
         seqNo += 1;
@@ -1172,6 +1264,8 @@ public class MeshCommand {
 
         static final int SR_IDENTIFIER_SUNRISE = 0x1C;
         static final int SR_IDENTIFIER_SUNSET = 0x1D;
+
+        static final int SR_IDENTIFIER_SMART_SWITCH_ID = 0x72;
     }
 
     public static class LightRunningMode {

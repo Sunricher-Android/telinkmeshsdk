@@ -76,4 +76,15 @@ public abstract class DeviceCallback {
     public void didGetAlarm(MeshManager manager, int address, MeshCommand.AbstractAlarm alarm) {
     }
 
+    /**
+     *
+     * @param manager
+     * @param address Device address.
+     * @param switchId If value is 0 means is not a valid switch ID.
+     * @param index Index of the smart switch.
+     * @param count Total smart switch count.
+     */
+    public void didGetSmartSwitchId(MeshManager manager, int address, long switchId, int index, int count) {
+    }
+
 }

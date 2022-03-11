@@ -32,9 +32,9 @@ public class MeshOtaFile {
         }
 
         String versionString = components[2];
-        int versionValue = Integer.parseInt(versionString);
+        int versionValue = Integer.parseInt(versionString, 16);
         otaFile.versionCode = versionValue;
-        otaFile.version = "V" + String.format("%.1f", otaFile.versionCode * 0.1);
+        otaFile.version = ("V" + versionString.charAt(0) + "." + versionString.charAt(1)).toUpperCase();
 
         Log.i("MeshOtaFile", "make MeshOtaFile "
                 + otaFile.name + ", " + otaFile.version + ", " + otaFile.versionCode);
@@ -83,7 +83,7 @@ public class MeshOtaFile {
 
             String valueString = version.replace("V", "");
             valueString = valueString.replace(".", "");
-            return Integer.parseInt(valueString, 10);
+            return Integer.parseInt(valueString, 16);
         }
         return 0;
     }

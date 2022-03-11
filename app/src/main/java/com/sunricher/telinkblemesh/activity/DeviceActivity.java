@@ -54,6 +54,8 @@ public class DeviceActivity extends AppCompatActivity {
         setDeleteGroupButton();
         setStartEntButton();
         setStopEntButton();
+        setUpSmartSwitchButton();
+        setUpGetSmartSwitchIdButton();
 
         MeshManager.getInstance().setDeviceCallback(new DeviceCallback() {
             @Override
@@ -157,8 +159,8 @@ public class DeviceActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isOn) {
                 MeshCommand cmd = MeshCommand.turnOnOff(device.getMeshDevice().getAddress(), isOn, 0);
-                MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"));
-//                MeshManager.getInstance().send(cmd);
+//                MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"));
+                MeshManager.getInstance().send(cmd);
             }
         });
 
@@ -183,8 +185,8 @@ public class DeviceActivity extends AppCompatActivity {
                 if (fromUser) {
 
                     MeshCommand cmd = MeshCommand.setBrightness(device.getMeshDevice().getAddress(), value);
-//                    MeshManager.getInstance().sendSample(cmd);
-                    MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"), true);
+                    MeshManager.getInstance().sendSample(cmd);
+//                    MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"), true);
                 }
             }
 
@@ -197,8 +199,8 @@ public class DeviceActivity extends AppCompatActivity {
             public void onStopTrackingTouch(SeekBar seekBar) {
 
                 MeshCommand cmd = MeshCommand.setBrightness(device.getMeshDevice().getAddress(), seekBar.getProgress());
-//                MeshManager.getInstance().send(cmd);
-                MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"), false);
+                MeshManager.getInstance().send(cmd);
+//                MeshManager.getInstance().sendMqttMessage(MqttMessage.meshCommand(cmd, "wd"), false);
             }
         });
     }
@@ -248,6 +250,33 @@ public class DeviceActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 MeshEntertainmentManager.getInstance().stop();
+            }
+        });
+    }
+
+    private void setUpSmartSwitchButton() {
+
+        Button btn = findViewById(R.id.smart_switch_btn);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DeviceActivity.this, SmartSwitchActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void setUpGetSmartSwitchIdButton() {
+
+        Button btn = findViewById(R.id.get_smart_switch_id_btn);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MeshCommand cmd;
+                for (int i = 0; i < 8; i++) {
+                    cmd = MeshCommand.getSmartSwitchId(device.getMeshDevice().getAddress(), i);
+                    MeshManager.getInstance().send(cmd);
+                }
             }
         });
     }

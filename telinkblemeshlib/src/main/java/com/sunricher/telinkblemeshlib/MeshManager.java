@@ -1173,6 +1173,8 @@ public final class MeshManager {
             return;
         }
 
+        SmartSwitchManager.getInstance().append(command);
+
         byte[] userData = command.getUserData();
         int srIdentifier = (int) userData[0] & 0xFF;
         int address = command.getSrc();
@@ -1242,6 +1244,12 @@ public final class MeshManager {
 
                 Log.i(LOG_TAG, "sunset");
                 handleSunriseSunsetCommand(command, MeshCommand.SunriseSunsetType.SUNSET);
+                break;
+
+            case MeshCommand.Const.SR_IDENTIFIER_SMART_SWITCH_ID:
+
+                Log.i(LOG_TAG, "smart switch ID");
+                handleSmartSwitchIdCommand(command);
                 break;
 
             default:
@@ -1596,6 +1604,22 @@ public final class MeshManager {
 
         if (deviceCallback == null) return;
         deviceCallback.didGetSunriseSunsetAction(this, command.getSrc(), action);
+    }
+
+    private void handleSmartSwitchIdCommand(MeshCommand command) {
+
+        int count = (int) command.getUserData()[1] & 0xFF;
+        int index = (int) command.getUserData()[2] & 0xFF;
+        long id1 = (long) command.getUserData()[3] & 0xFF;
+        long id2 = ((long) command.getUserData()[4] & 0xFF) << 8;
+        long id3 = ((long) command.getUserData()[5] & 0xFF) << 16;
+        long id4 = ((long) command.getUserData()[6] & 0xFF) << 24;
+        long switchId = id1 | id2 | id3 | id4;
+
+        Log.i(LOG_TAG, "did get smart switch ID " + switchId + ", index " + index + ", count " + count);
+
+        if (deviceCallback == null) return;
+        deviceCallback.didGetSmartSwitchId(this, command.getSrc(), switchId, index, count);
     }
 
     private void handleResponseGroupsValue(byte[] data) {

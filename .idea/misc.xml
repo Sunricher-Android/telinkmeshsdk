@@ -8,7 +8,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="../../../../../layout/custom_preview.xml" value="0.42916666666666664" />
         <entry key="app/src/main/res/layout/activity_device.xml" value="0.2572463768115942" />
+        <entry key="app/src/main/res/layout/activity_nfc_handler.xml" value="0.3704710144927536" />
+        <entry key="app/src/main/res/layout/activity_ota.xml" value="0.18432971014492755" />
+        <entry key="app/src/main/res/layout/activity_smart_switch.xml" value="0.2942708333333333" />
       </map>
     </option>
   </component>
