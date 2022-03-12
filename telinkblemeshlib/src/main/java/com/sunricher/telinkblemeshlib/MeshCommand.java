@@ -1033,6 +1033,12 @@ public class MeshCommand {
         return cmd;
     }
 
+    /**
+     *
+     * @param address Device address
+     * @param groupId Group ID (Room ID)
+     * @return
+     */
     public static MeshCommand addSmartSwitchIdWithGroupId(int address, int groupId) {
 
         long switchId = getSmartSwitchIdWithGroupId(groupId);
@@ -1051,6 +1057,13 @@ public class MeshCommand {
         return cmd;
     }
 
+    /**
+     * Delete the smart switch ID in the group.
+     *
+     * @param address Device address
+     * @param groupId Group ID
+     * @return
+     */
     public static MeshCommand deleteSmartSwitchIdWithGroupId(int address, int groupId) {
 
         long switchId = getSmartSwitchIdWithGroupId(groupId);
@@ -1069,7 +1082,14 @@ public class MeshCommand {
         return cmd;
     }
 
-    public static MeshCommand deleteSmartSwitchId(int address, int switchId) {
+    /**
+     * Delete the switch ID.
+     *
+     * @param address Device address
+     * @param switchId Switch ID, for example: 0x80010001
+     * @return
+     */
+    public static MeshCommand deleteSmartSwitchId(int address, long switchId) {
 
         MeshCommand cmd = new MeshCommand();
         cmd.tag = Const.TAG_APP_TO_NODE;
