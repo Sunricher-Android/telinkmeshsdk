@@ -5,9 +5,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.sunricher.telinkblemesh.R;
+import com.sunricher.telinkblemeshlib.MeshDeviceType;
 import com.sunricher.telinkblemeshlib.MeshManager;
+import com.sunricher.telinkblemeshlib.MeshNetwork;
+import com.sunricher.telinkblemeshlib.MeshOtaFile;
+import com.sunricher.telinkblemeshlib.MeshOtaManager;
 import com.sunricher.telinkblemeshlib.MqttMessage;
 import com.sunricher.telinkblemeshlib.callback.DeviceEventCallback;
 import com.sunricher.telinkblemeshlib.mqttdeviceevent.AbstractMqttDeviceEvent;
@@ -77,6 +82,35 @@ public class MainActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(MainActivity.this, AllDevicesActivity.class);
                 MainActivity.this.startActivity(intent);
+            }
+        });
+
+        Button otaBtn = findViewById(R.id.ota_btn);
+        otaBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                int address = 0x9C;
+                MeshDeviceType deviceType = new MeshDeviceType(0x01, 0x35);
+                MeshOtaFile otaFile = MeshOtaManager.getInstance().getLatestOtaFile(deviceType);
+
+                MeshOtaManager.getInstance().setCallback(new MeshOtaManager.Callback() {
+                    @Override
+                    public void didUpdateFailed(MeshOtaManager manager, MeshOtaManager.FailedReason reason) {
+                        Toast.makeText(MainActivity.this, "failed", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void didUpdateProgress(MeshOtaManager manager, int progress) {
+                        Toast.makeText(MainActivity.this, "p " + progress, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void didUpdateComplete() {
+                        Toast.makeText(MainActivity.this, "successful", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                MeshOtaManager.getInstance().startOta(address, MeshNetwork.factory, otaFile, MainActivity.this);
             }
         });
 

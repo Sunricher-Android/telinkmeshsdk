@@ -63,7 +63,7 @@ public final class MeshManager {
     private MeshNetwork network;
     private Boolean isAutoLogin;
     private Boolean isScanIgnoreName;
-    private Boolean isLogin;
+    private Boolean isLogin = false;
     private MeshNode connectNode;
     private NodeCallback nodeCallback;
     private DeviceCallback deviceCallback;
