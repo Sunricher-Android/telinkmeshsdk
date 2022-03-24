@@ -34,7 +34,7 @@ public class MeshOtaManager {
             int newProgress = otaPacketParser.getProgress();
             Log.i(LOG_TAG, "progress " + newProgress);
 
-            long delay = (otaPacketParser.index == 0) ? 300 : 10;
+            long delay = (otaPacketParser.index == 0) ? 300 : 20;
 
             getHandler().postDelayed(new Runnable() {
                 @Override
@@ -146,7 +146,7 @@ public class MeshOtaManager {
         MeshManager.getInstance().scanNode(network, false);
 
         timer = new Timer();
-        long connectInterval = 16000;
+        long connectInterval = 60000;
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
