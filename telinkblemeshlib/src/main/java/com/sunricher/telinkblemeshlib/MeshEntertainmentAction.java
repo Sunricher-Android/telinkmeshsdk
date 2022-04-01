@@ -36,6 +36,15 @@ public class MeshEntertainmentAction {
      * 0x0000FF = blue, ...
      */
     private Integer rgb = null;
+    private int actionIndex;
+
+    public int getActionIndex() {
+        return actionIndex;
+    }
+
+    public void setActionIndex(int actionIndex) {
+        this.actionIndex = actionIndex;
+    }
 
     public MeshEntertainmentAction(int target) {
         this.target = target;
