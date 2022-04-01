@@ -9,6 +9,7 @@ import android.util.Log;
 import com.sunricher.telinkblemeshlib.callback.SmartSwitchDataCallback;
 import com.sunricher.telinkblemeshlib.callback.SmartSwitchNfcCallback;
 import com.sunricher.telinkblemeshlib.models.SmartSwitchMode;
+import com.sunricher.telinkblemeshlib.util.HexUtil;
 
 import java.util.ArrayList;
 
@@ -133,6 +134,12 @@ public class SmartSwitchManager {
                 try {
 
                     nfca.connect();
+
+                    // Auth
+                    byte[] authBytes = new byte[]{(byte) 0x1B, (byte) 0x00, (byte) 0x00, (byte) 0xE2, (byte) 0x15};
+                    byte[] authResult = nfca.transceive(authBytes);
+                    String authString = HexUtil.getStringByBytes(authResult);
+                    Log.i(LOG_TAG, "auth result: " + authString);
 
                     switch (state) {
                         case State.startConfig:
